@@ -1151,11 +1151,15 @@ function buildToneQuestion(){
       item,
       options: opts,
       answer: correctIdx,
-      render:(opt)=> TONE_NAMES[opt-1]
+      render:(opt)=> renderToneOption(opt)
     };
   }
 }
 
+function renderToneOption(opt){
+  const mark = TONE_MARKS[opt-1];
+  return mark === "" ? "一聲(不標)" : mark;
+}
 function weightedMistakeKeys(){
   return Object.entries(STATE.mistakes).sort((a,b)=>b[1].count-a[1].count).map(e=>e[0]);
 }
@@ -1181,7 +1185,7 @@ function buildWeakFocusedQuestion(){
 }
 function buildToneQuestionFor(item){
   const correctIdx = item.tone;
-  return { kind:"tone-number", key:"tone:"+item.id, label:item.word, prompt:"「"+item.word+"」這個字是第幾聲？", item, options:[1,2,3,4,5], answer:correctIdx, render:(o)=>TONE_NAMES[o-1] };
+  return { kind:"tone-number", key:"tone:"+item.id, label:item.word, prompt:"「"+item.word+"」這個字是第幾聲？", item, options:[1,2,3,4,5], answer:correctIdx, render:(o)=>renderToneOption(o) };
 }
 
 function buildQuestionForMode(mode, dailySlotType){

@@ -558,6 +558,8 @@ function checkAchievements(){
    完整詞語：優先播放本機錄音檔(audio/words/*.mp3)，找不到才 fallback 用 zh-TW TTS。
    ============================================================ */
 // 教育部《國語注音符號手冊》官方音檔對照(37個，來源：bopomofo_audio_map.json)
+// 注意：官方音檔實際錄製順序是照萬國碼碼位排列(聲符→韻符→介符)，
+// 與畫面教學排列(聲符→介符→韻符)不同，這裡依實際音檔內容重新對應。
 const SYMBOL_AUDIO_MAP = {
   "ㄅ":"assets/audio/bopomofo/F1.WAV","ㄆ":"assets/audio/bopomofo/F2.WAV",
   "ㄇ":"assets/audio/bopomofo/F3.WAV","ㄈ":"assets/audio/bopomofo/F4.WAV",
@@ -569,15 +571,16 @@ const SYMBOL_AUDIO_MAP = {
   "ㄓ":"assets/audio/bopomofo/F15.WAV","ㄔ":"assets/audio/bopomofo/F16.WAV",
   "ㄕ":"assets/audio/bopomofo/F17.WAV","ㄖ":"assets/audio/bopomofo/F18.WAV",
   "ㄗ":"assets/audio/bopomofo/F19.WAV","ㄘ":"assets/audio/bopomofo/F20.WAV",
-  "ㄙ":"assets/audio/bopomofo/F21.WAV","ㄧ":"assets/audio/bopomofo/F22.WAV",
-  "ㄨ":"assets/audio/bopomofo/F23.WAV","ㄩ":"assets/audio/bopomofo/F24.WAV",
-  "ㄚ":"assets/audio/bopomofo/F25.WAV","ㄛ":"assets/audio/bopomofo/F26.WAV",
-  "ㄜ":"assets/audio/bopomofo/F27.WAV","ㄝ":"assets/audio/bopomofo/F28.WAV",
-  "ㄞ":"assets/audio/bopomofo/F29.WAV","ㄟ":"assets/audio/bopomofo/F30.WAV",
-  "ㄠ":"assets/audio/bopomofo/F31.WAV","ㄡ":"assets/audio/bopomofo/F32.WAV",
-  "ㄢ":"assets/audio/bopomofo/F33.WAV","ㄣ":"assets/audio/bopomofo/F34.WAV",
-  "ㄤ":"assets/audio/bopomofo/F35.WAV","ㄥ":"assets/audio/bopomofo/F36.WAV",
-  "ㄦ":"assets/audio/bopomofo/F37.WAV"
+  "ㄙ":"assets/audio/bopomofo/F21.WAV",
+  "ㄚ":"assets/audio/bopomofo/F22.WAV","ㄛ":"assets/audio/bopomofo/F23.WAV",
+  "ㄜ":"assets/audio/bopomofo/F24.WAV","ㄝ":"assets/audio/bopomofo/F25.WAV",
+  "ㄞ":"assets/audio/bopomofo/F26.WAV","ㄟ":"assets/audio/bopomofo/F27.WAV",
+  "ㄠ":"assets/audio/bopomofo/F28.WAV","ㄡ":"assets/audio/bopomofo/F29.WAV",
+  "ㄢ":"assets/audio/bopomofo/F30.WAV","ㄣ":"assets/audio/bopomofo/F31.WAV",
+  "ㄤ":"assets/audio/bopomofo/F32.WAV","ㄥ":"assets/audio/bopomofo/F33.WAV",
+  "ㄦ":"assets/audio/bopomofo/F34.WAV",
+  "ㄧ":"assets/audio/bopomofo/F35.WAV","ㄨ":"assets/audio/bopomofo/F36.WAV",
+  "ㄩ":"assets/audio/bopomofo/F37.WAV"
 };
 // 筆順素材對照：注音符號 -> {資料夾(以萬國碼碼位命名), 筆畫張數}
 const STROKE_MAP = {

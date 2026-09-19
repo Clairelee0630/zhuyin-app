@@ -818,14 +818,21 @@ function speakSymbol(sym){
   a.addEventListener('error', ()=> toast("發音檔載入失敗：" + url));
   a.play().catch(()=> toast("發音檔載入失敗：" + url));
 }
-// 完整詞語：本機錄音優先，找不到才用 zh-TW TTS
+// 完整詞語：目前尚未提供真人錄音檔，直接同步呼叫 zh-TW TTS。
+// （先前版本會先嘗試載入不存在的音檔、等404後才補講TTS，這段非同步等待
+// 會讓部分手機瀏覽器判定「不是使用者點擊當下觸發」而整個不出聲，
+// 所以改成點下去就同步呼叫語音，確保聽聽看一定有反應。）
+// 之後若要加入真人詞語錄音，只要把對應題目 id 加進 WORD_AUDIO_AVAILABLE，
+// 就會自動優先播放本機音檔、找不到才退回 TTS。
+const WORD_AUDIO_AVAILABLE = new Set([]);
 function speakWord(item){
-  const url = "assets/audio/words/" + item.id + ".mp3";
-  const a = new Audio(url);
-  let played = false;
-  a.addEventListener('canplaythrough', ()=>{ played = true; });
-  a.addEventListener('error', ()=>{ if(!played) speakTTS(item.word); });
-  a.play().then(()=>{ played = true; }).catch(()=>{ if(!played) speakTTS(item.word); });
+  if(WORD_AUDIO_AVAILABLE.has(item.id)){
+    const a = new Audio("assets/audio/words/" + item.id + ".mp3");
+    a.addEventListener('error', ()=> speakTTS(item.word));
+    a.play().catch(()=> speakTTS(item.word));
+  } else {
+    speakTTS(item.word);
+  }
 }
 
 /* ============================================================
@@ -907,7 +914,7 @@ function renderHome(){
       <div class="tile c-pink" data-go="table"><div class="emoji">📖</div><div class="label">注音總表</div></div>
       <div class="tile c-butter" data-go="stroke-table"><div class="emoji">✍️</div><div class="label">看筆順</div></div>
       <div class="tile c-lav" data-go="listen"><div class="emoji">🔊</div><div class="label">聽音找注音</div></div>
-      <div class="tile c-mint" data-go="spell"><div class="emoji">🔤</div><div class="label">拼音小高手</div></div>
+      <div class="tile c-mint" data-go="spell"><div class="emoji" style="font-size:24px; letter-spacing:1px;">ㄅㄆㄇ</div><div class="label">拼音小高手</div></div>
       <div class="tile c-butter" data-go="tone"><div class="emoji">🎵</div><div class="label">聲調大挑戰</div></div>
       <div class="tile wide c-pink" data-go="daily"><div class="emoji">🗓️</div><div class="label">每日10題</div></div>
       <div class="tile c-lav" data-go="review"><div class="emoji">🔁</div><div class="label">錯題練習</div></div>

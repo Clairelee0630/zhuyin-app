@@ -1711,7 +1711,7 @@ function renderPrincess(){
   room.style.textAlign = "center";
   room.innerHTML = `
     <div style="font-size:14px; font-weight:800; color:var(--pink-deep);">${info.emoji} Lv.${info.lv} ${info.title}</div>
-    ${princessSVG()}
+    <img src="assets/princess/base.png" alt="我的公主" style="display:block; margin:0 auto; width:200px; max-width:70%; filter:drop-shadow(0 6px 10px rgba(180,140,150,0.25));">
     <div id="bunnyRow" style="font-size:40px; margin-top:-10px; cursor:pointer;">🐰</div>
     <div class="feedback-msg" id="bunnySpeech" style="min-height:20px;"></div>
     ${info.next ? `

@@ -1406,12 +1406,14 @@ function renderRoundGame(mode){
     qcard.innerHTML = `
       <div class="qprompt">請選出正確的注音與聲調</div>
       <div class="qmain">${q.item.word}</div>
+      <div style="font-size:22px; color:var(--ink-soft); font-weight:800; margin-top:2px;">${q.item.bopomofo}</div>
       <div class="listen-btn" id="playWordBtn">🔊 聽發音</div>
     `;
   } else if(q.kind === "tone-number"){
     qcard.innerHTML = `
       <div class="qprompt">這個字是第幾聲？</div>
       <div class="qmain">${q.item.word}</div>
+      <div style="font-size:22px; color:var(--ink-soft); font-weight:800; margin-top:2px;">${q.item.bopomofo}</div>
       <div class="listen-btn" id="playWordBtn">🔊 聽發音</div>
     `;
   }

@@ -452,6 +452,187 @@ const TONE_WORD_BANK = [...WORD_BANK, ...LIGHT_TONE_WORDS];
 
 function fullSpelling(item){ return item.bopomofo + (TONE_MARKS[item.tone-1]||""); }
 
+// 雙音節詞語庫（拼音小高手 Level2/3 用）：每個字都經過人工核對注音與聲調
+// difficulty: 2=一般雙音節, 3=較適合進階(相似音/相似韻母練習)
+const TWO_SYLLABLE_BANK = [
+ {id:"w1",word:"小貓",emoji:"🐱",cat:"動物",difficulty:2,syllables:[{bopomofo:"ㄒㄧㄠ",tone:3},{bopomofo:"ㄇㄠ",tone:1}]},
+ {id:"w2",word:"小狗",emoji:"🐶",cat:"動物",difficulty:2,syllables:[{bopomofo:"ㄒㄧㄠ",tone:3},{bopomofo:"ㄍㄡ",tone:3}]},
+ {id:"w3",word:"蝴蝶",emoji:"🦋",cat:"動物",difficulty:2,syllables:[{bopomofo:"ㄏㄨ",tone:2},{bopomofo:"ㄉㄧㄝ",tone:2}]},
+ {id:"w4",word:"金魚",emoji:"🐠",cat:"動物",difficulty:2,syllables:[{bopomofo:"ㄐㄧㄣ",tone:1},{bopomofo:"ㄩ",tone:2}]},
+ {id:"w5",word:"老虎",emoji:"🐯",cat:"動物",difficulty:2,syllables:[{bopomofo:"ㄌㄠ",tone:3},{bopomofo:"ㄏㄨ",tone:3}]},
+ {id:"w6",word:"熊貓",emoji:"🐼",cat:"動物",difficulty:2,syllables:[{bopomofo:"ㄒㄩㄥ",tone:2},{bopomofo:"ㄇㄠ",tone:1}]},
+ {id:"w7",word:"兔子",emoji:"🐰",cat:"動物",difficulty:3,syllables:[{bopomofo:"ㄊㄨ",tone:4},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w8",word:"鴨子",emoji:"🦆",cat:"動物",difficulty:3,syllables:[{bopomofo:"ㄧㄚ",tone:1},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w9",word:"猴子",emoji:"🐵",cat:"動物",difficulty:3,syllables:[{bopomofo:"ㄏㄡ",tone:2},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w10",word:"獅子",emoji:"🦁",cat:"動物",difficulty:3,syllables:[{bopomofo:"ㄕ",tone:1},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w11",word:"蘋果",emoji:"🍎",cat:"水果",difficulty:2,syllables:[{bopomofo:"ㄆㄧㄥ",tone:2},{bopomofo:"ㄍㄨㄛ",tone:3}]},
+ {id:"w12",word:"西瓜",emoji:"🍉",cat:"水果",difficulty:2,syllables:[{bopomofo:"ㄒㄧ",tone:1},{bopomofo:"ㄍㄨㄚ",tone:1}]},
+ {id:"w13",word:"香蕉",emoji:"🍌",cat:"水果",difficulty:2,syllables:[{bopomofo:"ㄒㄧㄤ",tone:1},{bopomofo:"ㄐㄧㄠ",tone:1}]},
+ {id:"w14",word:"葡萄",emoji:"🍇",cat:"水果",difficulty:2,syllables:[{bopomofo:"ㄆㄨ",tone:2},{bopomofo:"ㄊㄠ",tone:2}]},
+ {id:"w15",word:"草莓",emoji:"🍓",cat:"水果",difficulty:2,syllables:[{bopomofo:"ㄘㄠ",tone:3},{bopomofo:"ㄇㄟ",tone:2}]},
+ {id:"w16",word:"橘子",emoji:"🍊",cat:"水果",difficulty:3,syllables:[{bopomofo:"ㄐㄩ",tone:2},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w17",word:"鳳梨",emoji:"🍍",cat:"水果",difficulty:3,syllables:[{bopomofo:"ㄈㄥ",tone:4},{bopomofo:"ㄌㄧ",tone:2}]},
+ {id:"w18",word:"蛋糕",emoji:"🎂",cat:"食物",difficulty:2,syllables:[{bopomofo:"ㄉㄢ",tone:4},{bopomofo:"ㄍㄠ",tone:1}]},
+ {id:"w19",word:"薯條",emoji:"🍟",cat:"食物",difficulty:2,syllables:[{bopomofo:"ㄕㄨ",tone:3},{bopomofo:"ㄊㄧㄠ",tone:2}]},
+ {id:"w20",word:"披薩",emoji:"🍕",cat:"食物",difficulty:3,syllables:[{bopomofo:"ㄆㄧ",tone:1},{bopomofo:"ㄙㄚ",tone:4}]},
+ {id:"w21",word:"漢堡",emoji:"🍔",cat:"食物",difficulty:2,syllables:[{bopomofo:"ㄏㄢ",tone:4},{bopomofo:"ㄅㄠ",tone:3}]},
+ {id:"w22",word:"飛機",emoji:"✈️",cat:"交通工具",difficulty:2,syllables:[{bopomofo:"ㄈㄟ",tone:1},{bopomofo:"ㄐㄧ",tone:1}]},
+ {id:"w23",word:"汽車",emoji:"🚗",cat:"交通工具",difficulty:2,syllables:[{bopomofo:"ㄑㄧ",tone:4},{bopomofo:"ㄔㄜ",tone:1}]},
+ {id:"w24",word:"公車",emoji:"🚌",cat:"交通工具",difficulty:2,syllables:[{bopomofo:"ㄍㄨㄥ",tone:1},{bopomofo:"ㄔㄜ",tone:1}]},
+ {id:"w25",word:"火車",emoji:"🚆",cat:"交通工具",difficulty:2,syllables:[{bopomofo:"ㄏㄨㄛ",tone:3},{bopomofo:"ㄔㄜ",tone:1}]},
+ {id:"w26",word:"輪船",emoji:"🚢",cat:"交通工具",difficulty:3,syllables:[{bopomofo:"ㄌㄨㄣ",tone:2},{bopomofo:"ㄔㄨㄢ",tone:2}]},
+ {id:"w27",word:"眼睛",emoji:"👀",cat:"身體部位",difficulty:2,syllables:[{bopomofo:"ㄧㄢ",tone:3},{bopomofo:"ㄐㄧㄥ",tone:1}]},
+ {id:"w28",word:"耳朵",emoji:"👂",cat:"身體部位",difficulty:3,syllables:[{bopomofo:"ㄦ",tone:3},{bopomofo:"ㄉㄨㄛ",tone:5}]},
+ {id:"w29",word:"鼻子",emoji:"👃",cat:"身體部位",difficulty:3,syllables:[{bopomofo:"ㄅㄧ",tone:2},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w30",word:"嘴巴",emoji:"👄",cat:"身體部位",difficulty:2,syllables:[{bopomofo:"ㄗㄨㄟ",tone:3},{bopomofo:"ㄅㄚ",tone:1}]},
+ {id:"w31",word:"肚子",emoji:"🫃",cat:"身體部位",difficulty:3,syllables:[{bopomofo:"ㄉㄨ",tone:4},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w32",word:"雨傘",emoji:"☂️",cat:"生活用品",difficulty:2,syllables:[{bopomofo:"ㄩ",tone:3},{bopomofo:"ㄙㄢ",tone:3}]},
+ {id:"w33",word:"眼鏡",emoji:"👓",cat:"生活用品",difficulty:2,syllables:[{bopomofo:"ㄧㄢ",tone:3},{bopomofo:"ㄐㄧㄥ",tone:4}]},
+ {id:"w34",word:"書包",emoji:"🎒",cat:"生活用品",difficulty:2,syllables:[{bopomofo:"ㄕㄨ",tone:1},{bopomofo:"ㄅㄠ",tone:1}]},
+ {id:"w35",word:"杯子",emoji:"🥤",cat:"生活用品",difficulty:3,syllables:[{bopomofo:"ㄅㄟ",tone:1},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w36",word:"椅子",emoji:"🪑",cat:"生活用品",difficulty:3,syllables:[{bopomofo:"ㄧ",tone:3},{bopomofo:"ㄗ",tone:5}]},
+ {id:"w37",word:"太陽",emoji:"☀️",cat:"自然",difficulty:2,syllables:[{bopomofo:"ㄊㄞ",tone:4},{bopomofo:"ㄧㄤ",tone:2}]},
+ {id:"w38",word:"月亮",emoji:"🌙",cat:"自然",difficulty:2,syllables:[{bopomofo:"ㄩㄝ",tone:4},{bopomofo:"ㄌㄧㄤ",tone:4}]},
+ {id:"w39",word:"星星",emoji:"⭐",cat:"自然",difficulty:3,syllables:[{bopomofo:"ㄒㄧㄥ",tone:1},{bopomofo:"ㄒㄧㄥ",tone:5}]},
+ {id:"w40",word:"彩虹",emoji:"🌈",cat:"自然",difficulty:2,syllables:[{bopomofo:"ㄘㄞ",tone:3},{bopomofo:"ㄏㄨㄥ",tone:2}]},
+ {id:"w41",word:"雪花",emoji:"❄️",cat:"自然",difficulty:3,syllables:[{bopomofo:"ㄒㄩㄝ",tone:3},{bopomofo:"ㄏㄨㄚ",tone:1}]},
+];
+const SPELL_ITEM_POOL = [...WORD_BANK, ...TWO_SYLLABLE_BANK];
+
+/* ---------- 拼音小高手：共用工具函式（全面以注音作答，國字僅作答對後回饋） ---------- */
+function itemSyllables(item){ return item.syllables ? item.syllables : [{bopomofo:item.bopomofo, tone:item.tone}]; }
+function fullSpellingItem(item){ return itemSyllables(item).map(s=>s.bopomofo + (TONE_MARKS[s.tone-1]||"")).join(' '); }
+function mutateSyllableStr(syll, hard){
+  const chars = syll.bopomofo.split('');
+  const kind = Math.random()<0.5 ? 'tone' : 'swap';
+  if(kind === 'tone'){
+    let nt = syll.tone;
+    while(nt === syll.tone) nt = 1 + Math.floor(Math.random()*4);
+    return syll.bopomofo + (TONE_MARKS[nt-1]||"");
+  } else {
+    const idx = Math.floor(Math.random()*chars.length);
+    const orig = chars[idx];
+    let pool = hard ? confusablesFor(orig) : [];
+    if(!pool.length) pool = ALL_SYMBOLS.filter(s=>s!==orig);
+    const rep = pickRandom(pool);
+    const nc = chars.slice(); nc[idx] = rep;
+    return nc.join('') + (TONE_MARKS[syll.tone-1]||"");
+  }
+}
+function mutateFullSpelling(item, hard){
+  const sylls = itemSyllables(item);
+  const idx = Math.floor(Math.random()*sylls.length);
+  const parts = sylls.map((s,i)=> i===idx ? mutateSyllableStr(s,hard) : s.bopomofo+(TONE_MARKS[s.tone-1]||""));
+  return parts.join(' ');
+}
+function buildOptionsForItem(item, hard){
+  const correct = fullSpellingItem(item);
+  const options = new Set([correct]);
+  let tries = 0;
+  while(options.size < 4 && tries < 40){
+    tries++;
+    const v = mutateFullSpelling(item, hard);
+    if(v && v !== correct) options.add(v);
+  }
+  while(options.size < 4){
+    const other = pickRandom(SPELL_ITEM_POOL);
+    const alt = fullSpellingItem(other);
+    if(alt !== correct) options.add(alt);
+  }
+  return shuffle([...options]);
+}
+function buildImageChoice(item, hard){
+  return {
+    kind:"image-choice", key:"word:"+item.id, item, label:item.word,
+    prompt:"這是什麼？選選看 ♡",
+    options: buildOptionsForItem(item, !!hard),
+    answer: fullSpellingItem(item),
+    render:(o)=>o
+  };
+}
+function buildListenChoice(item, hard){
+  return {
+    kind:"listen-choice", key:"word:"+item.id, item, label:item.word,
+    prompt:"🔊 聽一聽，選出正確的注音",
+    options: buildOptionsForItem(item, !!hard),
+    answer: fullSpellingItem(item),
+    render:(o)=>o
+  };
+}
+function buildFillBlank(item, hard){
+  const sylls = itemSyllables(item);
+  const sIdx = Math.floor(Math.random()*sylls.length);
+  const syll = sylls[sIdx];
+  const useTone = !!hard && Math.random() < 0.5;
+  let answer, options, displayParts;
+  if(useTone){
+    answer = TONE_MARKS[syll.tone-1] || "";
+    const allTones = [0,1,2,3,4].map(i=>TONE_MARKS[i]);
+    const opts = new Set([answer]);
+    shuffle(allTones).forEach(t=>{ if(opts.size<4) opts.add(t); });
+    options = shuffle([...opts]);
+    displayParts = sylls.map((s,i)=> i===sIdx ? s.bopomofo+"＿" : s.bopomofo+(TONE_MARKS[s.tone-1]||""));
+  } else {
+    const chars = syll.bopomofo.split('');
+    const bIdx = chars.length - 1;
+    answer = chars[bIdx];
+    let pool = confusablesFor(answer);
+    while(pool.length < 3){
+      const r = pickRandom(FINALS.concat(MEDIALS));
+      if(r !== answer && !pool.includes(r)) pool.push(r);
+    }
+    options = shuffle([answer, ...sample(pool,3)]);
+    const blanked = chars.slice(0,bIdx).join('') + "＿";
+    displayParts = sylls.map((s,i)=> i===sIdx ? blanked+(TONE_MARKS[s.tone-1]||"") : s.bopomofo+(TONE_MARKS[s.tone-1]||""));
+  }
+  return {
+    kind:"fill-blank", key:"word:"+item.id, item, label:item.word,
+    prompt: useTone ? "少了哪個聲調呢？" : "少了哪一個？",
+    partial: displayParts.join(' '),
+    options, answer,
+    render:(o)=>(o===""?"無符號":o)
+  };
+}
+function buildBuildQuestion(item, hard){
+  return {
+    kind:"build", key:"word:"+item.id, item, label:item.word,
+    sylls: itemSyllables(item), step:0, collected:[], curMiss:0, totalMiss:0, hard:!!hard
+  };
+}
+function buildSpellQuestion(){
+  const lvl = STATE.spellLevel || 1;
+  const r = Math.random();
+  if(lvl === 1){
+    const item = pickRandom(WORD_BANK);
+    return r < 0.7 ? buildImageChoice(item,false) : buildFillBlank(item,false);
+  } else if(lvl === 2){
+    const item = pickRandom(TWO_SYLLABLE_BANK);
+    return r < 0.6 ? buildListenChoice(item,false) : buildImageChoice(item,false);
+  } else {
+    const item = pickRandom(TWO_SYLLABLE_BANK);
+    if(r < 0.4) return buildBuildQuestion(item, true);
+    if(r < 0.7) return buildFillBlank(item, true);
+    return buildListenChoice(item, true);
+  }
+}
+function buildReviewSpellQuestion(item){
+  const sylls = itemSyllables(item);
+  return sylls.length > 1 ? buildListenChoice(item, true) : buildImageChoice(item, true);
+}
+function adjustSpellDifficulty(correct){
+  if(correct){
+    STATE.spellMissStreak = 0;
+    STATE.spellStreak = (STATE.spellStreak||0) + 1;
+    if(STATE.spellStreak >= 3 && STATE.spellLevel < 3){ STATE.spellLevel += 1; STATE.spellStreak = 0; }
+  } else {
+    STATE.spellStreak = 0;
+    STATE.spellMissStreak = (STATE.spellMissStreak||0) + 1;
+    if(STATE.spellMissStreak >= 2 && STATE.spellLevel > 1){ STATE.spellLevel -= 1; STATE.spellMissStreak = 0; }
+  }
+  saveState();
+}
+function isSpellKind(k){ return k==='image-choice' || k==='listen-choice' || k==='fill-blank' || k==='build'; }
+
 /* ============================================================
    本機儲存
    ============================================================ */
@@ -473,7 +654,8 @@ function defaultState(){
     mistakes:{}, // key -> {count, lastCorrect, label, type}
     achievements:[],
     settings:{ bgMusic:true, sfx:true },
-    history7:{} // date -> true if practiced
+    history7:{}, // date -> true if practiced
+    spellLevel:1, spellStreak:0, spellMissStreak:0 // 拼音小高手自動難度
   };
 }
 let STATE = loadState();
@@ -923,74 +1105,6 @@ function buildListenQuestion(){
   };
 }
 
-function buildSpellForwardQuestion(){
-  const item = pickRandom(WORD_BANK);
-  const correct = fullSpelling(item);
-  const options = new Set([correct]);
-  let tries = 0;
-  while(options.size < 4 && tries < 30){
-    tries++;
-    const variant = mutateSpelling(item);
-    if(variant && variant !== correct) options.add(variant);
-  }
-  while(options.size < 4){
-    const other = pickRandom(WORD_BANK);
-    const alt = fullSpelling(other);
-    if(alt !== correct) options.add(alt);
-  }
-  return {
-    kind:"spell-forward",
-    key:"word:"+item.id,
-    label:item.word+"("+item.emoji+")",
-    prompt: item.emoji + " " + item.word,
-    isEmojiPrompt:true,
-    item,
-    options: shuffle([...options]),
-    answer: correct,
-    render:(opt)=>opt
-  };
-}
-function buildSpellReverseQuestion(){
-  const item = pickRandom(WORD_BANK);
-  const correctSpell = fullSpelling(item);
-  const distractItems = sample(WORD_BANK.filter(w=>w.id!==item.id), 3);
-  const options = shuffle([item, ...distractItems]);
-  return {
-    kind:"spell-reverse",
-    key:"word:"+item.id,
-    label:correctSpell,
-    prompt: correctSpell,
-    item,
-    options,
-    answer: item.id,
-    render:(opt)=> opt.emoji + " " + opt.word
-  };
-}
-function mutateSpelling(item){
-  const base = item.bopomofo;
-  const chars = base.split('');
-  const type = pickRandom(['tone','swap']);
-  if(type === 'tone'){
-    let newTone = item.tone;
-    while(newTone === item.tone) newTone = 1 + Math.floor(Math.random()*4);
-    return base + (TONE_MARKS[newTone-1]||"");
-  } else {
-    const idx = Math.floor(Math.random()*chars.length);
-    const orig = chars[idx];
-    const confusables = confusablesFor(orig);
-    let replacement;
-    if(confusables.length){
-      replacement = pickRandom(confusables);
-    } else {
-      let group = ALL_SYMBOLS;
-      replacement = pickRandom(group.filter(s=>s!==orig));
-    }
-    const newChars = chars.slice();
-    newChars[idx] = replacement;
-    return newChars.join('') + (TONE_MARKS[item.tone-1]||"");
-  }
-}
-
 function buildToneQuestion(){
   const item = pickRandom(TONE_WORD_BANK);
   const mode = pickRandom(['pickSpelling','pickToneNumber']);
@@ -1045,19 +1159,12 @@ function buildWeakFocusedQuestion(){
   }
   if(key.startsWith("word:")){
     const id = key.slice(5);
-    const item = WORD_BANK.find(w=>w.id===id) || TONE_WORD_BANK.find(w=>w.id===id);
+    const item = WORD_BANK.find(w=>w.id===id) || TWO_SYLLABLE_BANK.find(w=>w.id===id) || TONE_WORD_BANK.find(w=>w.id===id);
     if(!item) return buildListenQuestion();
-    return Math.random()<0.5 ? buildSpellForwardQuestionFor(item) : buildToneQuestionFor(item);
+    if(typeof item.tone !== 'number') return buildReviewSpellQuestion(item);
+    return Math.random()<0.5 ? buildReviewSpellQuestion(item) : buildToneQuestionFor(item);
   }
   return buildListenQuestion();
-}
-function buildSpellForwardQuestionFor(item){
-  const correct = fullSpelling(item);
-  const options = new Set([correct]);
-  let tries=0;
-  while(options.size<4 && tries<30){ tries++; const v=mutateSpelling(item); if(v && v!==correct) options.add(v); }
-  while(options.size<4){ const other=pickRandom(WORD_BANK); const alt=fullSpelling(other); if(alt!==correct) options.add(alt); }
-  return { kind:"spell-forward", key:"word:"+item.id, label:item.word, prompt:item.emoji+" "+item.word, item, options:shuffle([...options]), answer:correct, render:(o)=>o };
 }
 function buildToneQuestionFor(item){
   const correctIdx = item.tone;
@@ -1066,13 +1173,13 @@ function buildToneQuestionFor(item){
 
 function buildQuestionForMode(mode, dailySlotType){
   if(mode === "listen") return buildListenQuestion();
-  if(mode === "spell") return Math.random()<0.5 ? buildSpellForwardQuestion() : buildSpellReverseQuestion();
+  if(mode === "spell") return buildSpellQuestion();
   if(mode === "tone") return buildToneQuestion();
   if(mode === "review") return buildWeakFocusedQuestion();
   if(mode === "daily"){
     if(dailySlotType==="recog") return Math.random()<0.5?buildListenQuestion():buildRecogQuestion();
     if(dailySlotType==="listen") return buildListenQuestion();
-    if(dailySlotType==="spell") return Math.random()<0.5?buildSpellForwardQuestion():buildSpellReverseQuestion();
+    if(dailySlotType==="spell") return buildSpellQuestion();
     if(dailySlotType==="tone") return buildToneQuestion();
     if(dailySlotType==="weak") return buildWeakFocusedQuestion();
   }
@@ -1129,6 +1236,96 @@ function finishRound(){
   go('result');
 }
 
+/* ---------------- 拼一拼（build）：多步驟注音積木組合 ---------------- */
+function renderBuildQuestionUI(s, q){
+  const item = q.item;
+  const card = document.createElement('div');
+  card.className = "qcard";
+  const remaining = q.sylls.length - q.step;
+  card.innerHTML = `
+    <div class="qprompt">拼一拼，組出正確的注音 ♡</div>
+    <div class="qmain emoji-big">${item.emoji}</div>
+    <div class="qmain" id="buildProgress">${'＿ '.repeat(remaining).trim()}</div>
+  `;
+  s.appendChild(card);
+
+  const feedback = document.createElement('div');
+  feedback.className = "feedback-msg";
+  feedback.id = "feedback";
+  s.appendChild(feedback);
+
+  const blockWrap = document.createElement('div');
+  blockWrap.className = "options";
+  s.appendChild(blockWrap);
+
+  renderBuildBlocks(blockWrap, q, feedback, card);
+}
+function renderBuildBlocks(blockWrap, q, feedback, card){
+  const syll = q.sylls[q.step];
+  const correctStr = syll.bopomofo + (TONE_MARKS[syll.tone-1]||"");
+  const n = q.hard ? 4 : (q.step === 0 ? 3 : 2); // 初期較少干擾選項，進階增加
+  const optSet = new Set([correctStr]);
+  let tries = 0;
+  while(optSet.size < n && tries < 30){ tries++; const v = mutateSyllableStr(syll, q.hard); if(v !== correctStr) optSet.add(v); }
+  const options = shuffle([...optSet]);
+  blockWrap.innerHTML = "";
+  options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = "opt-btn";
+    btn.textContent = opt;
+    btn.addEventListener('click', ()=> handleBuildTap(opt, correctStr, btn, blockWrap, q, feedback, card));
+    blockWrap.appendChild(btn);
+  });
+}
+function handleBuildTap(opt, correctStr, btnEl, blockWrap, q, feedback, card){
+  if(ROUND.awaitingNext) return;
+  if(opt === correctStr){
+    finishBuildStep(correctStr, blockWrap, q, feedback, card);
+  } else {
+    btnEl.classList.add('wrong');
+    q.curMiss = (q.curMiss||0) + 1;
+    if(q.curMiss === 1){
+      feedback.textContent = "再想想看 ♡";
+    } else {
+      q.totalMiss = (q.totalMiss||0) + 1;
+      [...blockWrap.children].forEach((b)=>{ if(b.textContent===correctStr) b.classList.add('correct'); b.style.pointerEvents='none'; });
+      feedback.textContent = "答案是這個唷～";
+      setTimeout(()=> finishBuildStep(correctStr, blockWrap, q, feedback, card), 900);
+    }
+  }
+}
+function finishBuildStep(correctStr, blockWrap, q, feedback, card){
+  q.collected.push(correctStr);
+  q.step += 1;
+  q.curMiss = 0;
+  [...blockWrap.children].forEach(b=> b.style.pointerEvents='none');
+  if(q.step >= q.sylls.length){
+    ROUND.awaitingNext = true;
+    const ok = !(q.totalMiss > 0);
+    ROUND.streak = ok ? ROUND.streak + 1 : 0;
+    if(ok) ROUND.correctCount += 1;
+    logAttempt(ok);
+    if(ok) recordCorrectFor(q.key);
+    adjustSpellDifficulty(ok);
+    if(!ok){ recordMistake(q.key, q.label, q.kind); ROUND.weakSet.add(q.label); }
+    let gained = ok ? 1 : 0;
+    if(ok && ROUND.streak > 0 && ROUND.streak % 5 === 0) gained += 2;
+    if(gained > 0) addStars(gained);
+    feedback.innerHTML = spellRevealHTML(q.item);
+    const rp = feedback.querySelector('#revealPlayBtn');
+    if(rp) rp.addEventListener('click', ()=> speakWord(q.item));
+    speakWord(q.item);
+    setTimeout(()=>{ ROUND.index += 1; nextQuestion(); }, 1800);
+  } else {
+    const progress = card.querySelector('#buildProgress');
+    const doneParts = q.collected.join(' ');
+    const remaining = q.sylls.length - q.step;
+    progress.textContent = doneParts + ' ' + '＿ '.repeat(remaining).trim();
+    feedback.textContent = "答對了！繼續下一個 ♡";
+    setTimeout(()=> renderBuildBlocks(blockWrap, q, feedback, card), 500);
+  }
+}
+
 function renderRoundGame(mode){
   if(!ROUND || ROUND.mode !== mode){ startRound(mode); return; }
   app.appendChild(topStatsBar());
@@ -1157,6 +1354,15 @@ function renderRoundGame(mode){
   s.appendChild(dots);
 
   const q = ROUND.q;
+
+  if(q.kind === "build"){
+    renderBuildQuestionUI(s, q);
+    app.appendChild(s);
+    header.querySelector('#backBtn').addEventListener('click', ()=>{ ROUND=null; go('home'); });
+    attachGear(app);
+    return;
+  }
+
   const qcard = document.createElement('div');
   qcard.className = "qcard";
 
@@ -1165,17 +1371,23 @@ function renderRoundGame(mode){
       <div class="qprompt">${q.prompt}</div>
       <div class="speaker-big" id="playBtn">🔊</div>
     `;
-  } else if(q.kind === "spell-forward"){
+  } else if(q.kind === "image-choice"){
     qcard.innerHTML = `
-      <div class="qprompt">請選出正確注音</div>
+      <div class="qprompt">${q.prompt}</div>
       <div class="qmain emoji-big">${q.item.emoji}</div>
-      <div class="qmain">${q.item.word}</div>
+      <div class="listen-btn" id="playWordBtn">🔊 聽聽看</div>
     `;
-  } else if(q.kind === "spell-reverse"){
+  } else if(q.kind === "listen-choice"){
     qcard.innerHTML = `
-      <div class="qprompt">請選出對應的圖片</div>
-      <div class="qmain">${q.prompt}</div>
-      <div class="listen-btn" id="playWordBtn">🔊 聽發音</div>
+      <div class="qprompt">${q.prompt}</div>
+      <div class="speaker-big" id="playWordBtn">🔊</div>
+    `;
+  } else if(q.kind === "fill-blank"){
+    qcard.innerHTML = `
+      <div class="qprompt">${q.prompt}</div>
+      <div class="qmain emoji-big">${q.item.emoji}</div>
+      <div class="qmain">${q.partial}</div>
+      <div class="listen-btn" id="playWordBtn">🔊 聽聽看</div>
     `;
   } else if(q.kind === "tone-spelling"){
     qcard.innerHTML = `
@@ -1220,11 +1432,24 @@ function renderRoundGame(mode){
   if((q.kind === "listen" || q.kind === "recog") && ROUND.attemptCount === 0){
     setTimeout(()=> speakSymbol(q.autoPlay || q.autoSymbol), 350);
   }
+  if(q.kind === "listen-choice" && ROUND.attemptCount === 0){
+    setTimeout(()=> speakWord(q.item), 350);
+  }
 }
 
 function isCorrectOption(q, opt){
-  if(q.kind === "spell-reverse") return opt.id === q.answer;
   return opt === q.answer;
+}
+
+// 拼音小高手答對後的回饋：圖片＋國字＋完整注音＋可再聽一次（國字只在答對後才出現）
+function spellRevealHTML(item){
+  return `🎉 答對了！<br>
+    <div style="margin-top:6px;">
+      <span style="font-size:32px;">${item.emoji}</span>
+      <span style="font-size:20px; margin-left:6px;">${item.word}</span>
+    </div>
+    <div style="font-size:20px; font-weight:800; margin-top:4px;">${fullSpellingItem(item)}</div>
+    <div class="listen-btn" id="revealPlayBtn" style="margin-top:8px;">🔊 再聽一次</div>`;
 }
 
 function handleAnswer(opt, btnEl, optWrap){
@@ -1233,6 +1458,7 @@ function handleAnswer(opt, btnEl, optWrap){
   const correct = isCorrectOption(q, opt);
   const feedback = document.getElementById('feedback');
   ROUND.attemptCount = (ROUND.attemptCount||0) + 1;
+  const spellKind = isSpellKind(q.kind);
 
   if(correct){
     btnEl.classList.add('correct');
@@ -1241,12 +1467,20 @@ function handleAnswer(opt, btnEl, optWrap){
     ROUND.correctCount += 1;
     logAttempt(true);
     recordCorrectFor(q.key);
+    if(spellKind) adjustSpellDifficulty(true);
     let gained = 1;
     if(ROUND.streak > 0 && ROUND.streak % 5 === 0) gained += 2;
     addStars(gained);
-    feedback.textContent = ROUND.streak>0 && ROUND.streak%5===0 ? `連續答對 ${ROUND.streak} 題！✨ +${gained}⭐` : `答對了！ +${gained}⭐`;
     disableOptions(optWrap);
-    setTimeout(()=>{ ROUND.index += 1; nextQuestion(); }, 700);
+    if(spellKind && q.item){
+      feedback.innerHTML = spellRevealHTML(q.item);
+      const rp = feedback.querySelector('#revealPlayBtn');
+      if(rp) rp.addEventListener('click', ()=> speakWord(q.item));
+      setTimeout(()=>{ ROUND.index += 1; nextQuestion(); }, 1800);
+    } else {
+      feedback.textContent = ROUND.streak>0 && ROUND.streak%5===0 ? `連續答對 ${ROUND.streak} 題！✨ +${gained}⭐` : `答對了！ +${gained}⭐`;
+      setTimeout(()=>{ ROUND.index += 1; nextQuestion(); }, 700);
+    }
   } else {
     btnEl.classList.add('wrong');
     ROUND.streak = 0;
@@ -1259,6 +1493,7 @@ function handleAnswer(opt, btnEl, optWrap){
       // 第二次仍答錯：標示正解，記錄錯題
       feedback.textContent = "差一點點～答案是這個唷";
       logAttempt(false);
+      if(spellKind) adjustSpellDifficulty(false);
       recordMistake(q.key, q.label, q.kind);
       ROUND.weakSet.add(q.label);
       disableOptions(optWrap, true, q, optWrap);

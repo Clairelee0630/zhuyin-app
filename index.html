@@ -47,13 +47,15 @@
   /* ---------- top bar ---------- */
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
-    padding:14px 18px 6px;
+    padding:14px 14px 6px;
+    gap:6px;
   }
   .stat-chip{
-    display:flex; align-items:center; gap:6px;
+    display:flex; align-items:center; gap:4px;
     background:var(--white); border-radius:999px;
-    padding:8px 14px; font-weight:700; font-size:15px;
+    padding:7px 10px; font-weight:700; font-size:14px;
     box-shadow:var(--shadow-flat);
+    white-space:nowrap;
   }
   .gear-btn{
     width:40px;height:40px; border-radius:50%;
@@ -655,7 +657,8 @@ function defaultState(){
     achievements:[],
     settings:{ bgMusic:true, sfx:true },
     history7:{}, // date -> true if practiced
-    spellLevel:1, spellStreak:0, spellMissStreak:0 // 拼音小高手自動難度
+    spellLevel:1, spellStreak:0, spellMissStreak:0, // 拼音小高手自動難度
+    gems:0, totalGemsEarned:0 // 注音小公主養成系統：寶石（只增不因答錯扣除）
   };
 }
 let STATE = loadState();
@@ -717,8 +720,14 @@ function recordCorrectFor(key){
 }
 function addStars(n){
   STATE.stars += n;
+  addGems(n, false);
   checkAchievements();
   saveState();
+}
+function addGems(n, save){
+  STATE.gems += n;
+  STATE.totalGemsEarned += n;
+  if(save !== false) saveState();
 }
 const ACHIEVEMENTS = [
   {id:"a10", need:10, label:"注音小新手", emoji:"🌱"},
@@ -726,10 +735,12 @@ const ACHIEVEMENTS = [
   {id:"a100", need:100, label:"注音達人", emoji:"👑"},
   {id:"a300", need:300, label:"注音小博士", emoji:"🎓"},
 ];
+const ACHIEVEMENT_GEM_BONUS = 5; // 第一次達成學習成就，額外獎勵寶石
 function checkAchievements(){
   ACHIEVEMENTS.forEach(a=>{
     if(STATE.stars >= a.need && !STATE.achievements.includes(a.id)){
       STATE.achievements.push(a.id);
+      addGems(ACHIEVEMENT_GEM_BONUS, false);
     }
   });
 }
@@ -895,6 +906,7 @@ function topStatsBar(){
   wrap.className = "topbar";
   wrap.innerHTML = `
     <div class="stat-chip">⭐ ${STATE.stars}</div>
+    <div class="stat-chip">💎 ${STATE.gems}</div>
     <div class="stat-chip">🔥 ${STATE.dailyDone}/${STATE.dailyTotal}</div>
     <div class="gear-btn" id="gearBtn">⚙️</div>
   `;

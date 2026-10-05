@@ -658,9 +658,14 @@ function defaultState(){
     settings:{ bgMusic:true, sfx:true },
     history7:{}, // date -> true if practiced
     spellLevel:1, spellStreak:0, spellMissStreak:0, // 拼音小高手自動難度
-    gems:0, totalGemsEarned:0, // 注音小公主養成系統：寶石（只增不因答錯扣除）
+    gems:0, totalGemsEarned:0, // 注音小公主養成系統：鑽石（只增不因答錯扣除）
     princessLevel:1, castleLevel:1, pendingLevelUp:null, // 公主等級（依累積星星，只升不降）、城堡等級（之後擴充用）
-    equippedOutfit:"o1", unlockedOutfits:["o1"] // 換裝系統：整套服裝切換
+    equippedOutfit:"o1", unlockedOutfits:["o1"], // 換裝系統：整套服裝切換
+    // --- v2 新增欄位（additive migration，不影響既有星星/鑽石/紀錄）---
+    levelScaleMigratedV2:false, // 是否已依新等級門檻重新校正過公主等級
+    gameStats:{ spellRounds:0, toneRounds:0, dailyRounds:0 }, // 各遊戲完成回合數，用於成就限定物品
+    symbolMastery:[], // 已答對過的注音符號（聽音找注音/注音總表/聲調），用於「37個注音熟練」成就
+    specialItemsUnlocked:[] // 升級獎勵／學習成就解鎖的特殊物品 id（髮飾、皇冠、魔法棒…）
   };
 }
 let STATE = loadState();
@@ -669,8 +674,30 @@ function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    return Object.assign(defaultState(), parsed);
+    const merged = Object.assign(defaultState(), parsed);
+    // 巢狀物件也要做 additive merge，避免舊資料覆蓋掉新欄位
+    merged.gameStats = Object.assign({spellRounds:0, toneRounds:0, dailyRounds:0}, parsed.gameStats||{});
+    merged.symbolMastery = Array.isArray(parsed.symbolMastery) ? parsed.symbolMastery : [];
+    merged.specialItemsUnlocked = Array.isArray(parsed.specialItemsUnlocked) ? parsed.specialItemsUnlocked : [];
+    return merged;
   }catch(e){ return defaultState(); }
+}
+// 新舊公主等級門檻不同，既有使用者的星星/鑽石/紀錄完全保留，
+// 只依「目前星星數」重新對應一次新等級，不重置任何資料。
+function migrateLevelScaleV2(){
+  if(STATE.levelScaleMigratedV2) return;
+  const info = princessLevelInfo(STATE.stars);
+  STATE.princessLevel = info.lv;
+  // 回溯補發已達成等級的獎勵（不重複、不彈出升級動畫，避免舊玩家突然被洗版）
+  PRINCESS_LEVELS.forEach(l=>{
+    if(l.lv <= info.lv && l.rewards){
+      l.rewards.forEach(r=>{
+        if(!STATE.specialItemsUnlocked.includes(r.id)) STATE.specialItemsUnlocked.push(r.id);
+      });
+    }
+  });
+  STATE.levelScaleMigratedV2 = true;
+  saveState();
 }
 function saveState(){
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); }catch(e){}
@@ -733,11 +760,12 @@ function addGems(n, save){
   if(save !== false) saveState();
 }
 const PRINCESS_LEVELS = [
-  {lv:1, need:0,   title:"注音小公主", emoji:"🌱"},
-  {lv:2, need:50,  title:"花園小公主", emoji:"🌷"},
-  {lv:3, need:120, title:"星星小公主", emoji:"✨"},
-  {lv:4, need:250, title:"月亮小公主", emoji:"🌙"},
-  {lv:5, need:500, title:"注音公主",   emoji:"👑"},
+  {lv:1, need:0,    title:"小小公主", emoji:"🌱", rewards:[]},
+  {lv:2, need:100,  title:"花園公主", emoji:"🌷", rewards:[{id:"r_accessory_unlock", icon:"🎀", name:"飾品功能"}]},
+  {lv:3, need:250,  title:"星星公主", emoji:"✨", rewards:[{id:"r_room_unlock", icon:"🏠", name:"房間布置"},{id:"r_star_hair", icon:"🎁", name:"星星髮飾"}]},
+  {lv:4, need:500,  title:"月亮公主", emoji:"🌙", rewards:[{id:"r_moon_crown", icon:"👑", name:"月亮皇冠"},{id:"r_moon_room", icon:"🌙", name:"星空房間背景"}]},
+  {lv:5, need:800,  title:"注音公主", emoji:"👑", rewards:[{id:"r_wand", icon:"🪄", name:"注音魔法棒"},{id:"r_limited_dress", icon:"👗", name:"注音限定禮服"}]},
+  {lv:6, need:1200, title:"夢幻公主", emoji:"🏰", rewards:[{id:"r_castle", icon:"🏰", name:"夢幻城堡"},{id:"r_rainbow_crown", icon:"👑", name:"彩虹皇冠"}]},
 ];
 function princessLevelInfo(stars){
   let cur = PRINCESS_LEVELS[0];
@@ -749,7 +777,12 @@ function checkPrincessLevel(){
   const info = princessLevelInfo(STATE.stars);
   if(info.lv > STATE.princessLevel){
     STATE.princessLevel = info.lv;
-    STATE.pendingLevelUp = {lv:info.lv, title:info.title, emoji:info.emoji};
+    (info.rewards||[]).forEach(r=>{
+      if(!STATE.specialItemsUnlocked.includes(r.id)) STATE.specialItemsUnlocked.push(r.id);
+    });
+    // Lv5 升級獎勵「注音限定禮服」= 實際可換裝的洋裝（o5），升級自動擁有，不需花鑽石
+    if(info.lv >= 5 && !STATE.unlockedOutfits.includes("o5")) STATE.unlockedOutfits.push("o5");
+    STATE.pendingLevelUp = {lv:info.lv, title:info.title, emoji:info.emoji, rewards:info.rewards||[]};
   }
 }
 const ACHIEVEMENTS = [
@@ -758,7 +791,7 @@ const ACHIEVEMENTS = [
   {id:"a100", need:100, label:"注音達人", emoji:"👑"},
   {id:"a300", need:300, label:"注音小博士", emoji:"🎓"},
 ];
-const ACHIEVEMENT_GEM_BONUS = 5; // 第一次達成學習成就，額外獎勵寶石
+const ACHIEVEMENT_GEM_BONUS = 5; // 第一次達成學習成就，額外獎勵鑽石
 function checkAchievements(){
   ACHIEVEMENTS.forEach(a=>{
     if(STATE.stars >= a.need && !STATE.achievements.includes(a.id)){
@@ -766,6 +799,28 @@ function checkAchievements(){
       addGems(ACHIEVEMENT_GEM_BONUS, false);
     }
   });
+}
+// 💖 學習成就限定物品：只能靠完成特定遊戲次數 / 熟練度解鎖，不能用鑽石購買
+const SPECIAL_ACHIEVEMENT_ITEMS = [
+  {id:"sa_bow",    icon:"🎀", name:"注音蝴蝶結", need:20, statKey:"spellRounds", gameLabel:"拼音小高手", obtainText:"完成拼音小高手 20 次"},
+  {id:"sa_wand",   icon:"🪄", name:"音符魔法棒", need:15, statKey:"toneRounds",  gameLabel:"聲調大挑戰", obtainText:"完成聲調大挑戰 15 次"},
+  {id:"sa_rainbow",icon:"👗", name:"彩虹禮服",   need:30, statKey:"dailyRounds", gameLabel:"每日10題",   obtainText:"完成每日10題 30 次"},
+  {id:"sa_crown",  icon:"👑", name:"注音皇冠",   need:37, statKey:"symbolMastery", gameLabel:"注音熟練", obtainText:"熟練全部 37 個注音符號"},
+];
+function checkGameAchievements(){
+  SPECIAL_ACHIEVEMENT_ITEMS.forEach(a=>{
+    const have = a.statKey === "symbolMastery" ? STATE.symbolMastery.length : (STATE.gameStats[a.statKey]||0);
+    if(have >= a.need && !STATE.specialItemsUnlocked.includes(a.id)){
+      STATE.specialItemsUnlocked.push(a.id);
+      toast(`💖 達成成就！獲得「${a.name}」${a.icon}`);
+    }
+  });
+}
+function recordSymbolMastery(sym){
+  if(sym && !STATE.symbolMastery.includes(sym)){
+    STATE.symbolMastery.push(sym);
+    checkGameAchievements();
+  }
 }
 
 /* ============================================================
@@ -919,6 +974,7 @@ function render(){
     case "stars": renderStars(); break;
     case "princess": renderPrincess(); break;
     case "dressup": renderDressUp(); break;
+    case "album": renderAlbum(); break;
     case "stats": renderStats(); break;
     case "parent-lock": renderParentLock(); break;
     case "parent": renderParent(); break;
@@ -1288,6 +1344,16 @@ function finishRound(){
     STATE.dailyWeak = [...ROUND.weakSet];
     if(ROUND.correctCount === ROUND.total){ addStars(5); }
     addStars(5);
+    STATE.gameStats.dailyRounds = (STATE.gameStats.dailyRounds||0) + 1;
+    checkGameAchievements();
+    saveState();
+  } else if(ROUND.mode === "spell"){
+    STATE.gameStats.spellRounds = (STATE.gameStats.spellRounds||0) + 1;
+    checkGameAchievements();
+    saveState();
+  } else if(ROUND.mode === "tone"){
+    STATE.gameStats.toneRounds = (STATE.gameStats.toneRounds||0) + 1;
+    checkGameAchievements();
     saveState();
   }
   go('result');
@@ -1526,6 +1592,7 @@ function handleAnswer(opt, btnEl, optWrap){
     ROUND.correctCount += 1;
     logAttempt(true);
     recordCorrectFor(q.key);
+    if(q.kind === "listen" || q.kind === "recog") recordSymbolMastery(q.key);
     if(spellKind) adjustSpellDifficulty(true);
     let gained = 1;
     if(ROUND.streak > 0 && ROUND.streak % 5 === 0) gained += 2;
@@ -1649,19 +1716,23 @@ function renderStars(){
 
 /* ---------------- 我的公主 ---------------- */
 // 換裝系統：10 套完整插畫服裝（同一個角色、不同服裝造型），整套切換
+// App 裡只有「一位公主」：以下都是同一位公主可以替換的洋裝，而不是不同的公主。
+// source: "starter"=一開始就有／"diamond"=鑽石購買／"level"=升級獎勵自動獲得（不可購買）
 const OUTFITS = [
-  {id:"o1",  name:"甜心蝴蝶結公主", price:0,  image:"assets/princess/outfit01.png", filter:""},
-  {id:"o2",  name:"藍色蕾絲公主",   price:20, image:"assets/princess/outfit02.png", filter:""},
-  {id:"o3",  name:"薰衣草兔兔公主", price:25, image:"assets/princess/outfit03.png", filter:""},
-  {id:"o4",  name:"陽光雛菊公主",   price:30, image:"assets/princess/outfit04.png", filter:""},
-  {id:"o5",  name:"紅心公主",       price:35, image:"assets/princess/outfit05.png", filter:""},
-  {id:"o6",  name:"兔兔連帽公主",   price:40, image:"assets/princess/outfit06.png", filter:""},
-  {id:"o7",  name:"玫瑰花園公主",   price:45, image:"assets/princess/outfit07.png", filter:""},
-  {id:"o8",  name:"星月魔法公主",   price:60, image:"assets/princess/outfit08.png", filter:""},
-  {id:"o9",  name:"幸運草公主",     price:50, image:"assets/princess/outfit09.png", filter:""},
-  {id:"o10", name:"冬日毛絨公主",   price:70, image:"assets/princess/outfit10.png", filter:""},
+  {id:"o1",  name:"甜心蝴蝶結洋裝", price:0,   levelReq:0, source:"starter", image:"assets/princess/outfit01.png", filter:""},
+  {id:"o2",  name:"藍色蕾絲洋裝",   price:50,  levelReq:0, source:"diamond", image:"assets/princess/outfit02.png", filter:""},
+  {id:"o3",  name:"薰衣草兔兔洋裝", price:80,  levelReq:0, source:"diamond", image:"assets/princess/outfit03.png", filter:""},
+  {id:"o4",  name:"向日葵洋裝",     price:90,  levelReq:0, source:"diamond", image:"assets/princess/outfit04.png", filter:""},
+  {id:"o5",  name:"注音限定禮服",   price:0,   levelReq:5, source:"level",   image:"assets/princess/outfit05.png", filter:"", obtainText:"Lv.5 升級獎勵"},
+  {id:"o6",  name:"兔兔連帽洋裝",   price:100, levelReq:0, source:"diamond", image:"assets/princess/outfit06.png", filter:""},
+  {id:"o7",  name:"花園洋裝",       price:110, levelReq:0, source:"diamond", image:"assets/princess/outfit07.png", filter:""},
+  {id:"o8",  name:"星空魔法洋裝",   price:150, levelReq:4, source:"diamond", image:"assets/princess/outfit08.png", filter:""},
+  {id:"o9",  name:"幸運草洋裝",     price:120, levelReq:0, source:"diamond", image:"assets/princess/outfit09.png", filter:""},
+  {id:"o10", name:"冬日公主洋裝",   price:140, levelReq:0, source:"diamond", image:"assets/princess/outfit10.png", filter:""},
 ];
 function getOutfit(id){ return OUTFITS.find(o=>o.id===id) || OUTFITS[0]; }
+// 一件洋裝目前是否已經「鑽石足夠但等級不夠」而鎖著
+function outfitLevelLocked(o){ return (o.levelReq||0) > 0 && STATE.princessLevel < o.levelReq; }
 const BUNNY_LINES = [
   "一起學注音吧 ♡", "你好厲害！", "今天要穿哪件裙子呢？",
   "再玩一題嘛 ♡", "你來啦 ♡ 今天也一起玩吧！"
@@ -1721,20 +1792,32 @@ function renderPrincess(){
   const info = princessLevelInfo(STATE.stars);
   const progressToNext = info.next ? Math.min(100, Math.round((STATE.stars - info.need) / (info.next.need - info.need) * 100)) : 100;
   const curOutfit = getOutfit(STATE.equippedOutfit);
+  const bunnyReady = STATE.unlockedOutfits.includes("__bunny__"); // 兔兔尚無素材，先保留擴充旗標
 
   const room = document.createElement('div');
   room.className = "stat-card";
   room.style.background = "linear-gradient(180deg, #F3E9FB 0%, #FFF8EF 70%)";
   room.style.textAlign = "center";
   room.innerHTML = `
-    <div style="font-size:14px; font-weight:800; color:var(--pink-deep);">${info.emoji} Lv.${info.lv} ${info.title}</div>
-    <img src="${curOutfit.image}" alt="我的公主" style="display:block; margin:0 auto; width:200px; max-width:70%; filter:${curOutfit.filter} drop-shadow(0 6px 10px rgba(180,140,150,0.25));">
+    <div style="font-size:15px; font-weight:800; color:var(--pink-deep);">${info.emoji} Lv.${info.lv} ${info.title}</div>
+    <div class="princess-stage" id="princessStage" style="position:relative; width:180px; height:220px; margin:6px auto 0; cursor:pointer;">
+      <img src="${curOutfit.image}" alt="我的公主" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; filter:${curOutfit.filter} drop-shadow(0 6px 10px rgba(180,140,150,0.25));">
+      ${bunnyReady ? `<img src="assets/princess/bunny.png" alt="小兔兔" style="position:absolute; right:-10px; bottom:6px; width:46px; height:46px; object-fit:contain; object-position:center;">` : ``}
+    </div>
     <div style="font-size:12px; color:var(--ink-soft); font-weight:700;">${curOutfit.name}</div>
-    <div id="bunnyRow" style="font-size:40px; margin-top:-6px; cursor:pointer;">🐰</div>
     <div class="feedback-msg" id="bunnySpeech" style="min-height:20px;"></div>
+    <div style="font-size:13px; font-weight:800; color:var(--ink); margin-top:4px;">⭐ ${STATE.stars}${info.next ? ` / ${info.next.need}` : ""}</div>
     ${info.next ? `
       <div class="hold-progress" style="margin-top:6px;"><div class="fill" style="width:${progressToNext}%;"></div></div>
-      <div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">再 ${info.next.need - STATE.stars} 顆星星升級到 ${info.next.emoji} ${info.next.title}</div>
+      <div style="font-size:12px; color:var(--ink-soft); margin-top:6px;">再獲得 ${info.next.need - STATE.stars} ⭐ 即可成為<br><b style="color:var(--pink-deep);">${info.next.emoji} ${info.next.title}</b></div>
+      ${(info.next.rewards||[]).length ? `
+        <div style="margin-top:8px; background:rgba(255,255,255,0.6); border-radius:14px; padding:8px 10px;">
+          <div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-bottom:4px;">🎁 下一級獎勵</div>
+          <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+            ${info.next.rewards.map(r=>`<span style="font-size:12px; font-weight:700;">${r.icon} ${r.name}</span>`).join('')}
+          </div>
+        </div>
+      ` : ``}
     ` : `<div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">已經是最高等級囉 ♡</div>`}
   `;
   s.appendChild(room);
@@ -1747,7 +1830,7 @@ function renderPrincess(){
     <div class="tile c-butter" data-soon="accessory"><div class="emoji">🎀</div><div class="label">飾品</div></div>
     <div class="tile c-lav" data-soon="room"><div class="emoji">🏠</div><div class="label">房間</div></div>
     <div class="tile c-mint" data-soon="bunny"><div class="emoji">🐰</div><div class="label">小兔兔</div></div>
-    <div class="tile wide c-pink" data-soon="album"><div class="emoji">🏆</div><div class="label">收藏冊</div></div>
+    <div class="tile wide c-pink" data-go="album"><div class="emoji">🏆</div><div class="label">收藏冊</div></div>
   `;
   s.appendChild(grid);
 
@@ -1761,12 +1844,12 @@ function renderPrincess(){
   s.querySelectorAll('[data-go]').forEach(el=>{
     el.addEventListener('click', ()=> go(el.getAttribute('data-go')));
   });
-  const bunny = s.querySelector('#bunnyRow');
+  const stage = s.querySelector('#princessStage');
   const bunnySpeech = s.querySelector('#bunnySpeech');
-  bunny.addEventListener('click', ()=>{
+  stage.addEventListener('click', ()=>{
     bunnySpeech.textContent = pickRandom(BUNNY_LINES);
-    bunny.style.transform = "translateY(-6px)";
-    setTimeout(()=> bunny.style.transform = "translateY(0)", 200);
+    stage.style.transform = "translateY(-4px)";
+    setTimeout(()=> stage.style.transform = "translateY(0)", 200);
   });
 
   if(STATE.pendingLevelUp){
@@ -1781,6 +1864,14 @@ function renderPrincess(){
           <div style="font-size:32px;">✨ LEVEL UP ✨</div>
           <div style="font-size:44px; margin:10px 0;">${lvl.emoji}</div>
           <p>升級成${lvl.title}了 ♡</p>
+          ${(lvl.rewards&&lvl.rewards.length) ? `
+            <div style="background:#FFF3F8; border-radius:14px; padding:10px 14px; margin:8px 0 14px;">
+              <div style="font-size:12px; font-weight:800; color:var(--ink-soft); margin-bottom:4px;">🎁 獲得新獎勵</div>
+              <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+                ${lvl.rewards.map(r=>`<span style="font-size:13px; font-weight:800;">${r.icon} ${r.name}</span>`).join('')}
+              </div>
+            </div>
+          ` : ``}
           <button class="action-btn primary" id="levelUpOk" style="margin:0;">太棒了！</button>
         </div>
       `;
@@ -1788,6 +1879,75 @@ function renderPrincess(){
       overlay.querySelector('#levelUpOk').addEventListener('click', ()=> overlay.remove());
     }, 300);
   }
+}
+
+/* ---------------- 收藏冊 ---------------- */
+function albumRow(icon, name, got, obtainText){
+  return `
+    <div style="display:flex; align-items:center; gap:10px; background:${got? 'rgba(255,255,255,0.75)':'rgba(255,255,255,0.4)'}; border-radius:14px; padding:10px 12px; margin-bottom:8px;">
+      <div style="font-size:26px; ${got?'':'filter:grayscale(1); opacity:0.55;'}">${icon}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px; font-weight:800; color:${got?'var(--ink)':'var(--ink-soft)'};">${name}</div>
+        <div style="font-size:11px; color:${got?'#2E9C6B':'var(--ink-soft)'}; font-weight:700; margin-top:2px;">${got? '✓ 已取得' : '🔒 '+obtainText}</div>
+      </div>
+    </div>
+  `;
+}
+function renderAlbum(){
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div');
+  s.className = "screen";
+  const header = document.createElement('div');
+  header.className = "header-row";
+  header.innerHTML = `<div class="back-btn" id="backBtn">←</div><h2>收藏冊</h2>`;
+  s.appendChild(header);
+
+  const intro = document.createElement('div');
+  intro.className = "qprompt";
+  intro.style.margin = "0 0 10px";
+  intro.textContent = "看看公主已經擁有的，以及下一個目標是什麼 ♡";
+  s.appendChild(intro);
+
+  // 洋裝
+  const dressCard = document.createElement('div');
+  dressCard.className = "stat-card";
+  dressCard.innerHTML = `<div style="font-size:14px; font-weight:800; margin-bottom:8px;">👗 洋裝收藏</div>`;
+  OUTFITS.forEach(o=>{
+    const got = STATE.unlockedOutfits.includes(o.id);
+    let obtain;
+    if(o.source === "level") obtain = `Lv.${o.levelReq} 升級獎勵`;
+    else if(outfitLevelLocked(o)) obtain = `Lv.${o.levelReq} 解鎖 ＋ 💎${o.price}`;
+    else obtain = `💎 ${o.price}`;
+    dressCard.innerHTML += albumRow("👗", o.name, got, obtain);
+  });
+  s.appendChild(dressCard);
+
+  // 升級獎勵（飾品／房間／城堡等，先以收藏形式呈現，功能頁later開放）
+  const rewardCard = document.createElement('div');
+  rewardCard.className = "stat-card";
+  rewardCard.innerHTML = `<div style="font-size:14px; font-weight:800; margin-bottom:8px;">🎁 升級獎勵</div>`;
+  PRINCESS_LEVELS.forEach(l=>{
+    (l.rewards||[]).forEach(r=>{
+      if(r.id === "r_limited_dress") return; // 已經在洋裝收藏顯示過
+      const got = STATE.specialItemsUnlocked.includes(r.id);
+      rewardCard.innerHTML += albumRow(r.icon, r.name, got, `Lv.${l.lv} 升級獎勵`);
+    });
+  });
+  s.appendChild(rewardCard);
+
+  // 學習成就限定
+  const achieveCard = document.createElement('div');
+  achieveCard.className = "stat-card";
+  achieveCard.innerHTML = `<div style="font-size:14px; font-weight:800; margin-bottom:8px;">💖 學習成就限定</div>`;
+  SPECIAL_ACHIEVEMENT_ITEMS.forEach(a=>{
+    const got = STATE.specialItemsUnlocked.includes(a.id);
+    achieveCard.innerHTML += albumRow(a.icon, a.name, got, a.obtainText);
+  });
+  s.appendChild(achieveCard);
+
+  app.appendChild(s);
+  header.querySelector('#backBtn').addEventListener('click', ()=> go('princess'));
+  attachGear(app);
 }
 
 /* ---------------- 換裝 ---------------- */
@@ -1814,7 +1974,9 @@ function renderDressUp(){
   function renderPreview(){
     const cur = getOutfit(STATE.equippedOutfit);
     preview.innerHTML = `
-      <img id="previewImg" src="${cur.image}" alt="${cur.name}" style="display:block; margin:0 auto; width:180px; max-width:60%; filter:${cur.filter} drop-shadow(0 6px 10px rgba(180,140,150,0.25));">
+      <div style="position:relative; width:170px; height:208px; margin:0 auto;">
+        <img id="previewImg" src="${cur.image}" alt="${cur.name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; filter:${cur.filter} drop-shadow(0 6px 10px rgba(180,140,150,0.25));">
+      </div>
       <div style="font-size:14px; font-weight:800; color:var(--pink-deep); margin-top:6px;">${cur.name}</div>
     `;
   }
@@ -1823,17 +1985,24 @@ function renderDressUp(){
     OUTFITS.forEach(o=>{
       const unlocked = STATE.unlockedOutfits.includes(o.id);
       const equipped = STATE.equippedOutfit === o.id;
+      const levelLocked = !unlocked && outfitLevelLocked(o);
       const card = document.createElement('div');
       card.className = "symbol-card";
       card.style.aspectRatio = "auto";
       card.style.padding = "10px 6px";
       card.style.gap = "4px";
+      let statusHTML;
+      if(equipped) statusHTML = "✨ 穿著中";
+      else if(unlocked) statusHTML = "點一下換上";
+      else if(o.source === "level") statusHTML = `🔒 Lv.${o.levelReq} 升級獎勵`;
+      else if(levelLocked) statusHTML = `🔒 Lv.${o.levelReq} 解鎖`;
+      else statusHTML = "🔒 💎"+o.price;
       card.innerHTML = `
-        <img src="${o.image}" style="width:64px; height:64px; object-fit:contain; filter:${o.filter} ${unlocked?'':'grayscale(1) opacity(0.5)'};">
-        <div style="font-size:12px; font-weight:800; text-align:center;">${o.name}</div>
-        <div style="font-size:12px; color:var(--pink-deep); font-weight:800;">
-          ${equipped ? "✨ 穿著中" : unlocked ? "點一下換上" : "🔒 💎"+o.price}
+        <div style="position:relative; width:72px; height:92px;">
+          <img src="${o.image}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; filter:${o.filter} ${unlocked?'':'grayscale(1) opacity(0.5)'};">
         </div>
+        <div style="font-size:12px; font-weight:800; text-align:center;">${o.name}</div>
+        <div style="font-size:12px; color:var(--pink-deep); font-weight:800;">${statusHTML}</div>
       `;
       card.addEventListener('click', ()=>{
         if(equipped) return;
@@ -1845,9 +2014,17 @@ function renderDressUp(){
           toast(o.name + " 換好了 ♡");
           return;
         }
-        confirmDialog(`要用 ${o.price} 顆寶石解鎖「${o.name}」嗎？`, ()=>{
+        if(o.source === "level"){
+          toast(`這件洋裝是 Lv.${o.levelReq} 的升級獎勵，升到那個等級就會自動獲得唷 ♡`);
+          return;
+        }
+        if(levelLocked){
+          toast(`要先升到 Lv.${o.levelReq} 才能解鎖這件洋裝唷 ♡`);
+          return;
+        }
+        confirmDialog(`要用 ${o.price} 顆鑽石解鎖「${o.name}」嗎？`, ()=>{
           if(STATE.gems < o.price){
-            toast("寶石不夠唷，再多完成幾題吧 ♡");
+            toast("鑽石不夠唷，再多完成幾題吧 ♡");
             return;
           }
           STATE.gems -= o.price;
@@ -1855,7 +2032,7 @@ function renderDressUp(){
           STATE.equippedOutfit = o.id;
           saveState();
           toast("✨ 新衣服解鎖！");
-          render(); // 整個畫面連同頂部寶石數字一起刷新
+          render(); // 整個畫面連同頂部鑽石數字一起刷新
         });
       });
       grid.appendChild(card);
@@ -2049,6 +2226,7 @@ function confirmDialog(msg, onYes){
    初始化
    ============================================================ */
 ensureDailyFresh();
+migrateLevelScaleV2();
 render();
 </script>
 </body>

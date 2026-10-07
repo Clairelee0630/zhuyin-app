@@ -688,7 +688,9 @@ function defaultState(){
     equippedHeadAccessory:null, equippedHandAccessory:null, // 頭部欄位（髮飾/皇冠共用）、手持欄位（魔法棒）
     // --- v4 新增欄位：房間與小兔兔 ---
     ownedRooms:["room_pink"], equippedRoom:"room_pink",
-    bunny:{ affection:0, fedDate:"", petDate:"", petCount:0 }
+    bunny:{ affection:0, fedDate:"", petDate:"", petCount:0 },
+    // --- v5 新增欄位：每日公主任務 ---
+    quests:{ date:"", ids:[], claimed:[], bonus:false, rounds:{} }
   };
 }
 let STATE = loadState();
@@ -711,6 +713,7 @@ function loadState(){
     if(!merged.ownedRooms.includes("room_pink")) merged.ownedRooms.push("room_pink");
     if(!merged.ownedRooms.includes(merged.equippedRoom)) merged.equippedRoom = "room_pink";
     merged.bunny = Object.assign({affection:0, fedDate:"", petDate:"", petCount:0}, parsed.bunny||{});
+    merged.quests = Object.assign({date:"", ids:[], claimed:[], bonus:false, rounds:{}}, parsed.quests||{});
     return merged;
   }catch(e){ return defaultState(); }
 }
@@ -933,6 +936,71 @@ function roomObtain(r){
   return {text:`💎${r.price} 解鎖`, tone:"locked"};
 }
 
+// ===== 每日公主任務：每天 3 個（第 1 個固定為每日10題），完成後領 💎，全部完成再領額外獎勵 =====
+const QUEST_POOL = [
+  {id:"q_daily",  icon:"📅", text:"完成每日 10 題",       need:1,  kind:"round", mode:"daily"},
+  {id:"q_spell",  icon:"🧩", text:"玩一次拼音小高手",     need:1,  kind:"round", mode:"spell"},
+  {id:"q_tone",   icon:"🎵", text:"玩一次聲調大挑戰",     need:1,  kind:"round", mode:"tone"},
+  {id:"q_listen", icon:"👂", text:"玩一次聽音找注音",     need:1,  kind:"round", mode:"listen"},
+  {id:"q_correct",icon:"⭐", text:"今天答對 15 題",       need:15, kind:"correct"},
+  {id:"q_feed",   icon:"🥕", text:"餵小兔兔紅蘿蔔",       need:1,  kind:"feed"},
+  {id:"q_pet",    icon:"🤗", text:"摸摸小兔兔 2 次",      need:2,  kind:"pet"},
+];
+const QUEST_GEMS = 5, QUEST_BONUS_GEMS = 10;
+function questById(id){ return QUEST_POOL.find(q=>q.id===id); }
+function ensureQuests(){
+  const t = todayStr(), Q = STATE.quests;
+  if(Q.date === t && Q.ids.length === 3) return;
+  let h = 0; for(const c of t) h = (h*31 + c.charCodeAt(0)) % 9973;
+  const rest = QUEST_POOL.filter(q=>q.id !== "q_daily").map(q=>q.id);
+  const first = rest.splice(h % rest.length, 1)[0];
+  const second = rest[(h*7 + 3) % rest.length];
+  STATE.quests = {date:t, ids:["q_daily", first, second], claimed:[], bonus:false, rounds:{}};
+  saveState();
+}
+function questRound(mode){ ensureQuests(); STATE.quests.rounds[mode] = (STATE.quests.rounds[mode]||0) + 1; saveState(); }
+function questProgress(q){
+  ensureQuests();
+  let v = 0;
+  if(q.kind === "round") v = STATE.quests.rounds[q.mode] || 0;
+  else if(q.kind === "correct") v = (STATE.practiceLog[todayStr()]||{}).correct || 0;
+  else if(q.kind === "feed") v = STATE.bunny.fedDate === todayStr() ? 1 : 0;
+  else if(q.kind === "pet") v = bunnyState().petCount;
+  return Math.min(q.need, v);
+}
+function questDone(q){ return questProgress(q) >= q.need; }
+function questClaimable(q){ return questDone(q) && !STATE.quests.claimed.includes(q.id); }
+function claimQuest(id){
+  ensureQuests(); const q = questById(id);
+  if(!q || !STATE.quests.ids.includes(id) || !questClaimable(q)) return false;
+  STATE.quests.claimed.push(id); addGems(QUEST_GEMS, false); saveState(); return true;
+}
+function questAllClaimed(){ ensureQuests(); return STATE.quests.ids.every(id=>STATE.quests.claimed.includes(id)); }
+function claimQuestBonus(){
+  if(STATE.quests.bonus || !questAllClaimed()) return false;
+  STATE.quests.bonus = true; addGems(QUEST_BONUS_GEMS, false); saveState(); return true;
+}
+function questCardHTML(){
+  ensureQuests();
+  const rows = STATE.quests.ids.map(id=>{
+    const q = questById(id), pr = questProgress(q), claimed = STATE.quests.claimed.includes(id), can = questClaimable(q);
+    return `<div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.7); border-radius:14px; padding:9px 12px; margin-bottom:7px;">
+      <div style="font-size:24px; width:30px; text-align:center;">${q.icon}</div>
+      <div style="flex:1; text-align:left;">
+        <div style="font-size:13px; font-weight:800; color:var(--ink);">${q.text}</div>
+        <div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:2px;">${pr} / ${q.need}　·　💎${QUEST_GEMS}</div>
+      </div>
+      ${claimed ? `<div style="font-size:12px; font-weight:800; color:#2E9C6B;">✓ 已領取</div>`
+        : can ? `<div class="action-btn primary" data-quest="${id}" style="margin:0; padding:6px 14px; width:auto; font-size:12px;">領取</div>`
+        : `<div style="font-size:12px; font-weight:800; color:var(--ink-soft);">加油 ♡</div>`}
+    </div>`;
+  }).join("");
+  const allDone = questAllClaimed();
+  const bonus = STATE.quests.bonus ? `<div style="font-size:12px; font-weight:800; color:#2E9C6B; margin-top:4px;">🎉 今天的任務全部完成了！明天再來 ♡</div>`
+    : allDone ? `<div class="action-btn primary" data-questbonus="1" style="margin:6px auto 0; padding:8px 18px; width:auto; display:inline-block; font-size:13px;">🎁 領取全部完成獎勵 💎${QUEST_BONUS_GEMS}</div>`
+    : `<div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:4px;">三個都完成，還有額外 💎${QUEST_BONUS_GEMS}</div>`;
+  return `<div style="font-size:14px; font-weight:800; margin-bottom:8px; text-align:left;">🌸 每日公主任務</div>${rows}<div style="text-align:center;">${bonus}</div>`;
+}
 // ===== 小兔兔：每天可餵食一次、摸摸三次，累積好感度（0–100，只增不減）=====
 const BUNNY_MAX = 100, BUNNY_BOW_AT = 60;
 function bunnyState(){ const b = STATE.bunny; const t = todayStr(); if(b.petDate !== t){ b.petDate = t; b.petCount = 0; } return b; }
@@ -1615,6 +1683,7 @@ function nextQuestion(){
   render();
 }
 function finishRound(){
+  questRound(ROUND.mode);
   if(ROUND.mode === "daily"){
     STATE.dailyDone = Math.min(STATE.dailyTotal, STATE.dailyDone + ROUND.total);
     STATE.dailyCorrect += ROUND.correctCount;
@@ -2198,6 +2267,16 @@ function renderPrincess(){
     banner.addEventListener('click', ()=> showGiftClaim());
   }
 
+  const qc = document.createElement('div');
+  qc.className = "stat-card";
+  qc.id = "questCard";
+  qc.innerHTML = questCardHTML();
+  s.appendChild(qc);
+  qc.addEventListener('click', e=>{
+    const b = e.target.closest('[data-quest],[data-questbonus]'); if(!b) return;
+    if(b.hasAttribute('data-quest')){ if(claimQuest(b.getAttribute('data-quest'))){ toast(`✨ 任務完成！+💎${QUEST_GEMS}`); refreshKeepScroll(); } }
+    else if(claimQuestBonus()){ toast(`🎉 全部完成！額外 +💎${QUEST_BONUS_GEMS}`); refreshKeepScroll(); }
+  });
   const grid = document.createElement('div');
   grid.className = "grid-home";
   grid.style.marginTop = "14px";
@@ -2878,7 +2957,7 @@ function confirmDialog(msg, onYes){
 /* ============================================================
    初始化
    ============================================================ */
-ensureDailyFresh();
+ensureDailyFresh(); ensureQuests();
 migrateLevelScaleV2();
 migrateRewardsV3();
 checkGameAchievements(); saveState();

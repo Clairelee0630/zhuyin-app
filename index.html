@@ -249,6 +249,7 @@
   .burst{position:relative; height:0;}
   .burst span{position:absolute; left:50%; top:56px; font-size:20px; opacity:0; animation:burstOut .95s ease-out forwards;}
   @keyframes burstOut{0%{opacity:0; transform:translate(-50%,-50%) scale(.3);} 30%{opacity:1;} 100%{opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.25);}}
+  @keyframes bunnyHop{0%{transform:translateY(0)} 35%{transform:translateY(-14px)} 70%{transform:translateY(0)} 85%{transform:translateY(-5px)} 100%{transform:translateY(0)}}
   @keyframes popIn{0%{transform:scale(.4);} 70%{transform:scale(1.15);} 100%{transform:scale(1);}}
   .pop-icon{animation:popIn .5s ease-out;}
   @media (prefers-reduced-motion:reduce){ .burst span,.pop-icon{animation:none;} .burst span{opacity:0;} }
@@ -684,7 +685,10 @@ function defaultState(){
     claimedRewards:[],   // 已實際領取的升級禮物 id
     pendingRewards:[],   // 已達成、可領取但尚未領取的升級禮物 id
     ownedAccessories:["acc_pink_bow"], // 已擁有的飾品（粉紅蝴蝶結為初始擁有）
-    equippedHeadAccessory:null, equippedHandAccessory:null // 頭部欄位（髮飾/皇冠共用）、手持欄位（魔法棒）
+    equippedHeadAccessory:null, equippedHandAccessory:null, // 頭部欄位（髮飾/皇冠共用）、手持欄位（魔法棒）
+    // --- v4 新增欄位：房間與小兔兔 ---
+    ownedRooms:["room_pink"], equippedRoom:"room_pink",
+    bunny:{ affection:0, fedDate:"", petDate:"", petCount:0 }
   };
 }
 let STATE = loadState();
@@ -703,6 +707,10 @@ function loadState(){
     merged.ownedAccessories = Array.isArray(parsed.ownedAccessories) ? parsed.ownedAccessories : ["acc_pink_bow"];
     if(!merged.ownedAccessories.includes("acc_pink_bow")) merged.ownedAccessories.push("acc_pink_bow");
     merged.implementedFeatures = Object.assign({accessories:false, room:false, bunny:false}, parsed.implementedFeatures||{});
+    merged.ownedRooms = Array.isArray(parsed.ownedRooms) ? parsed.ownedRooms : ["room_pink"];
+    if(!merged.ownedRooms.includes("room_pink")) merged.ownedRooms.push("room_pink");
+    if(!merged.ownedRooms.includes(merged.equippedRoom)) merged.equippedRoom = "room_pink";
+    merged.bunny = Object.assign({affection:0, fedDate:"", petDate:"", petCount:0}, parsed.bunny||{});
     return merged;
   }catch(e){ return defaultState(); }
 }
@@ -792,8 +800,8 @@ function addGems(n, save){
 // implemented=false 的功能，不論玩家等級多高都只顯示「🚧 即將開放」。
 const FEATURES = {
   accessories:{icon:"🎀", name:"飾品",   implemented:true,  requiredLevel:2},
-  room:       {icon:"🏠", name:"房間",   implemented:false, requiredLevel:3},
-  bunny:      {icon:"🐰", name:"小兔兔", implemented:false, requiredLevel:0},
+  room:       {icon:"🏠", name:"房間",   implemented:true,  requiredLevel:3},
+  bunny:      {icon:"🐰", name:"小兔兔", implemented:true,  requiredLevel:0},
 };
 function featureFlags(){ const o={}; Object.keys(FEATURES).forEach(k=>o[k]=FEATURES[k].implemented); return o; }
 function curLevel(){ return princessLevelInfo(STATE.stars).lv; } // 永遠由星星即時推算
@@ -827,7 +835,7 @@ function princessLevelInfo(stars){
 const REWARD_GIFTS = {
   r_star_hair:     {level:3, icon:"🌟", name:"星星髮飾",     type:"accessory", itemId:"acc_star_hair"},
   r_moon_crown:    {level:4, icon:"👑", name:"月亮皇冠",     type:"accessory", itemId:"acc_moon_crown"},
-  r_moon_room:     {level:4, icon:"🌙", name:"星空房間背景", type:"room"},
+  r_moon_room:     {level:4, icon:"🌙", name:"星空房間背景", type:"room", itemId:"room_stars"},
   r_wand:          {level:5, icon:"🪄", name:"注音魔法棒",   type:"accessory", itemId:"acc_zhuyin_wand"},
   r_limited_dress: {level:5, icon:"👗", name:"注音限定禮服", type:"outfit",    itemId:"o5"},
   r_castle:        {level:6, icon:"🏰", name:"夢幻城堡",     type:"castle"},
@@ -859,6 +867,7 @@ function claimReward(id){
   STATE.pendingRewards = STATE.pendingRewards.filter(x=>x!==id);
   if(g.type === "accessory" && !STATE.ownedAccessories.includes(g.itemId)) STATE.ownedAccessories.push(g.itemId);
   if(g.type === "outfit" && !STATE.unlockedOutfits.includes(g.itemId)) STATE.unlockedOutfits.push(g.itemId);
+  if(g.type === "room" && !STATE.ownedRooms.includes(g.itemId)) STATE.ownedRooms.push(g.itemId);
   saveState();
   return true;
 }
@@ -896,6 +905,50 @@ const ACC_CATEGORIES = [
   {key:"crown", icon:"👑", label:"皇冠"},
   {key:"wand",  icon:"🪄", label:"魔法棒"},
 ];
+// ===== 房間（背景）：stage 上依序疊 房間背景 → 公主(含飾品) → 小兔兔 =====
+const ROOMS = [
+  {id:"room_pink",   name:"粉紅小房間", image:"assets/rooms/room_pink.svg",   unlockType:"default", price:0},
+  {id:"room_garden", name:"花園庭院",   image:"assets/rooms/room_garden.svg", unlockType:"diamond", price:60},
+  {id:"room_candy",  name:"糖果屋",     image:"assets/rooms/room_candy.svg",  unlockType:"diamond", price:80},
+  {id:"room_study",  name:"注音小書房", image:"assets/rooms/room_study.svg",  unlockType:"diamond", price:100},
+  {id:"room_stars",  name:"星空房間",   image:"assets/rooms/room_stars.svg",  unlockType:"level",   requiredLevel:4, price:0, rewardId:"r_moon_room"},
+];
+function roomById(id){ return ROOMS.find(r=>r.id===id) || ROOMS[0]; }
+function roomOwned(r){ return STATE.ownedRooms.includes(r.id); }
+function buyRoom(id){
+  const r = ROOMS.find(x=>x.id===id);
+  if(!r || r.unlockType !== "diamond" || roomOwned(r)) return "no";
+  if(STATE.gems < r.price) return "poor";
+  STATE.gems -= r.price; STATE.ownedRooms.push(id); saveState(); return "ok";
+}
+function roomObtain(r){
+  if(roomOwned(r)) return {text:"✓ 已取得", tone:"got"};
+  if(r.unlockType === "level"){
+    if(giftStatus(r.rewardId) === "claimable") return {text:"🎁 可領取", tone:"gift", claim:r.rewardId};
+    return {text:`🔒 Lv.${r.requiredLevel} 升級禮物`, tone:"locked"};
+  }
+  return {text:`💎${r.price} 解鎖`, tone:"locked"};
+}
+
+// ===== 小兔兔：每天可餵食一次、摸摸三次，累積好感度（0–100，只增不減）=====
+const BUNNY_MAX = 100, BUNNY_BOW_AT = 60;
+function bunnyState(){ const b = STATE.bunny; const t = todayStr(); if(b.petDate !== t){ b.petDate = t; b.petCount = 0; } return b; }
+function bunnyHearts(){ return Math.min(5, Math.floor(STATE.bunny.affection / 20)); }
+function bunnyImage(){ return STATE.bunny.affection >= BUNNY_BOW_AT ? "assets/bunny/bunny_bow.svg" : "assets/bunny/bunny.svg"; }
+function bunnyCanFeed(){ return STATE.bunny.fedDate !== todayStr(); }
+function bunnyPetsLeft(){ return Math.max(0, 3 - bunnyState().petCount); }
+function feedBunny(){ if(!bunnyCanFeed()) return false; STATE.bunny.fedDate = todayStr(); STATE.bunny.affection = Math.min(BUNNY_MAX, STATE.bunny.affection + 10); saveState(); return true; }
+function petBunny(){ if(bunnyPetsLeft() <= 0) return false; bunnyState().petCount += 1; STATE.bunny.affection = Math.min(BUNNY_MAX, STATE.bunny.affection + 3); saveState(); return true; }
+// 房間舞台：背景 + 公主 + 小兔兔（寬度 W，比例 4:3）
+function roomStageHTML(W, opts){
+  opts = opts || {};
+  const H = Math.round(W*0.75), room = roomById(STATE.equippedRoom), outfit = getOutfit(STATE.equippedOutfit);
+  const bw = Math.round(W*0.2);
+  return `<div class="room-stage" style="position:relative; width:${W}px; height:${H}px; margin:0 auto; border-radius:18px; overflow:hidden; border:3px solid #5B4A45; background:#fff url('${room.image}') center/cover no-repeat;">
+    <div style="position:absolute; left:50%; bottom:2%; transform:translateX(-50%);">${princessStackHTML(outfit, Math.round(H*0.88))}</div>
+    ${FEATURES.bunny.implemented ? `<img class="room-bunny" src="${bunnyImage()}" alt="小兔兔" style="position:absolute; right:3%; bottom:2%; width:${bw}px; height:${bw}px; object-fit:contain; ${opts.hop?'animation:bunnyHop .5s;':''}">` : ``}
+  </div>`;
+}
 function accById(id){ return ACCESSORIES.find(a=>a.id===id) || null; }
 // 規格要求的 claimed / equipped 欄位：由玩家狀態即時推導
 function accClaimed(a){ return STATE.ownedAccessories.includes(a.id); }
@@ -1148,6 +1201,8 @@ function render(){
     case "dressup": renderDressUp(); break;
     case "album": renderAlbum(); break;
     case "accessories": renderAccessories(); break;
+    case "room": renderRoom(); break;
+    case "bunny": renderBunny(); break;
     case "stats": renderStats(); break;
     case "parent-lock": renderParentLock(); break;
     case "parent": renderParent(); break;
@@ -1958,6 +2013,7 @@ function refreshKeepScroll(){ const y = window.scrollY; render(); window.scrollT
 function giftVisual(g, size){
   if(g.type === "accessory"){ const a = accById(g.itemId); return `<img src="${a.image}" alt="${g.name}" style="width:${size}px; height:${size}px; object-fit:contain; object-position:center;">`; }
   if(g.type === "outfit"){ const o = getOutfit(g.itemId); return `<img src="${o.image}" alt="${g.name}" style="width:${size}px; height:${size}px; object-fit:contain; object-position:center;">`; }
+  if(g.type === "room"){ const r = roomById(g.itemId); return `<img src="${r.image}" alt="${g.name}" style="width:${Math.round(size*1.3)}px; height:${size}px; object-fit:cover; border-radius:10px; border:2px solid #5B4A45;">`; }
   return `<span style="font-size:${Math.round(size*0.8)}px;">${g.icon}</span>`;
 }
 // 孩子按下領取後：亮光＋星星動畫，並可「馬上戴上」
@@ -1965,9 +2021,9 @@ function showClaimCelebration(id){
   const g = REWARD_GIFTS[id];
   const dirs = [[-90,-70],[90,-70],[-110,10],[110,10],[-60,80],[60,80],[0,-100],[0,95],[-40,-95],[40,-95]];
   const burst = dirs.map((d,k)=>`<span style="--dx:${d[0]}px; --dy:${d[1]}px; animation-delay:${k*0.03}s;">${k%2?'⭐':'✨'}</span>`).join('');
-  const isAcc = g.type === "accessory", isOutfit = g.type === "outfit";
+  const isAcc = g.type === "accessory", isOutfit = g.type === "outfit", isRoom = g.type === "room";
   const a = isAcc ? accById(g.itemId) : null;
-  const wearLabel = isOutfit ? "馬上換上" : (a && a.slot === "hand" ? "馬上使用" : "馬上戴上");
+  const wearLabel = isRoom ? "馬上布置" : isOutfit ? "馬上換上" : (a && a.slot === "hand" ? "馬上使用" : "馬上戴上");
   const overlay = document.createElement('div');
   overlay.className = "confirm-overlay";
   overlay.innerHTML = `
@@ -1978,7 +2034,7 @@ function showClaimCelebration(id){
       <p style="margin-bottom:14px;">${g.name}</p>
       <div class="confirm-actions">
         <button class="action-btn secondary" id="celOk" style="margin:0; white-space:nowrap;">好的</button>
-        ${(isAcc || isOutfit) ? `<button class="action-btn primary" id="celWear" style="margin:0; white-space:nowrap; padding-left:10px; padding-right:10px;">${wearLabel}</button>` : ``}
+        ${(isAcc || isOutfit || isRoom) ? `<button class="action-btn primary" id="celWear" style="margin:0; white-space:nowrap; padding-left:10px; padding-right:10px;">${wearLabel}</button>` : ``}
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -1991,7 +2047,8 @@ function showClaimCelebration(id){
   overlay.querySelector('#celOk').addEventListener('click', ()=> done());
   const w = overlay.querySelector('#celWear');
   if(w) w.addEventListener('click', ()=> done(()=>{
-    if(isOutfit){ STATE.equippedOutfit = g.itemId; saveState(); toast(g.name + " 換好了 ♡"); }
+    if(isRoom){ STATE.equippedRoom = g.itemId; saveState(); toast("房間換成" + g.name + "了 ♡"); }
+    else if(isOutfit){ STATE.equippedOutfit = g.itemId; saveState(); toast(g.name + " 換好了 ♡"); }
     else { equipAccessory(g.itemId); toast(g.name + (a.slot==='hand' ? " 拿在手上了 ♡" : " 戴好了 ♡")); }
   }));
 }
@@ -2038,7 +2095,6 @@ function renderPrincess(){
   const info = princessLevelInfo(STATE.stars);
   const progressToNext = info.next ? Math.min(100, Math.round((STATE.stars - info.need) / (info.next.need - info.need) * 100)) : 100;
   const curOutfit = getOutfit(STATE.equippedOutfit);
-  const bunnyReady = STATE.implementedFeatures.bunny && STATE.unlockedOutfits.includes("__bunny__"); // 小兔兔尚未開發
 
   const room = document.createElement('div');
   room.className = "stat-card";
@@ -2046,9 +2102,8 @@ function renderPrincess(){
   room.style.textAlign = "center";
   room.innerHTML = `
     <div style="font-size:15px; font-weight:800; color:var(--pink-deep);">${info.emoji} Lv.${info.lv} ${info.title}</div>
-    <div class="princess-stage" id="princessStage" style="position:relative; width:fit-content; margin:6px auto 0; cursor:pointer;">
-      ${princessStackHTML(curOutfit, 220)}
-      ${bunnyReady ? `<img src="assets/princess/bunny.png" alt="小兔兔" style="position:absolute; right:-10px; bottom:6px; width:46px; height:46px; object-fit:contain; object-position:center;">` : ``}
+    <div class="princess-stage" id="princessStage" style="position:relative; width:fit-content; margin:8px auto 0; cursor:pointer;">
+      ${roomStageHTML(Math.min(320, window.innerWidth-72))}
     </div>
     <div style="font-size:12px; color:var(--ink-soft); font-weight:700;">${curOutfit.name}</div>
     <div class="feedback-msg" id="bunnySpeech" style="min-height:20px;"></div>
@@ -2115,9 +2170,9 @@ function renderPrincess(){
   const stage = s.querySelector('#princessStage');
   const bunnySpeech = s.querySelector('#bunnySpeech');
   stage.addEventListener('click', ()=>{
-    bunnySpeech.textContent = pickRandom(BUNNY_LINES);
-    stage.style.transform = "translateY(-4px)";
-    setTimeout(()=> stage.style.transform = "translateY(0)", 200);
+    bunnySpeech.textContent = "🐰 " + pickRandom(BUNNY_LINES);
+    const b = stage.querySelector('.room-bunny');
+    if(b){ b.style.animation = "none"; void b.offsetWidth; b.style.animation = "bunnyHop .5s"; }
   });
 
   let levelUpShown = false;
@@ -2218,7 +2273,7 @@ function renderAlbum(){
   // 🎁 公主升級禮物：實體物品，要領取才算取得
   section("🎁 公主升級禮物", Object.keys(REWARD_GIFTS).map(id=>{
     const g = REWARD_GIFTS[id], st = giftStatus(id);
-    const icon = (g.type==="accessory"||g.type==="outfit") ? giftVisual(g, 34) : g.icon;
+    const icon = (g.type==="accessory"||g.type==="outfit"||g.type==="room") ? giftVisual(g, 30) : g.icon;
     if(st === "claimed")   return albumRow(icon, g.name, "✓ 已取得", "got");
     if(st === "claimable") return albumRow(icon, g.name, `🎁 可領取（Lv.${g.level}）`, "gift", id);
     if(st === "soon")      return albumRow(icon, g.name, `🚧 即將開放（已達成 Lv.${g.level}）`, "soon");
@@ -2237,6 +2292,12 @@ function renderAlbum(){
     }
     return albumRow(thumb, o.name, outfitLevelLocked(o) ? `🔒 Lv.${o.levelReq} 解鎖 ＋ 💎${o.price}` : `💎${o.price} 解鎖`, "locked");
   }).join(""));
+  section("🏠 房間", ROOMS.map(r=>{
+    const o = roomObtain(r);
+    return albumRow(`<img src="${r.image}" alt="${r.name}" style="width:40px; height:30px; object-fit:cover; border-radius:6px; border:1.5px solid #5B4A45;">`, r.name, o.text, o.tone, o.claim);
+  }).join(""));
+  section("🐰 小兔兔", albumRow(`<img src="${bunnyImage()}" alt="小兔兔" style="width:34px; height:34px; object-fit:contain;">`, "小兔兔", `好感度 ${STATE.bunny.affection}/${BUNNY_MAX}`, "got")
+    + albumRow(`<img src="assets/bunny/bunny_bow.svg" alt="蝴蝶結小兔兔" style="width:34px; height:34px; object-fit:contain; ${STATE.bunny.affection>=BUNNY_BOW_AT?'':'filter:grayscale(1);'}">`, "蝴蝶結小兔兔", STATE.bunny.affection>=BUNNY_BOW_AT ? "✓ 已取得" : `🐰 好感度 ${BUNNY_BOW_AT} 解鎖（${STATE.bunny.affection}/${BUNNY_BOW_AT}）`, STATE.bunny.affection>=BUNNY_BOW_AT ? "got" : "locked"));
   ACC_CATEGORIES.forEach(cat=>{
     section(`${cat.icon} ${cat.label}`, ACCESSORIES.filter(a=>a.category===cat.key).map(a=>{
       const o = accObtain(a);
@@ -2348,6 +2409,125 @@ function renderAccessories(){
   tabs.querySelectorAll('[data-tab]').forEach(el=> el.addEventListener('click', ()=>{ ACC_TAB = el.getAttribute('data-tab'); refreshKeepScroll(); }));
   const clr = s.querySelector('#clearAcc');
   if(clr) clr.addEventListener('click', ()=>{ unequipAccessory("head"); unequipAccessory("hand"); toast("飾品都卸下了"); refreshKeepScroll(); });
+  attachGear(app);
+}
+
+/* ---------------- 房間 ---------------- */
+function renderRoom(){
+  if(featureStatus("room") !== "open"){
+    ROUTE = {name:"princess"}; toast(`要升到 Lv.${FEATURES.room.requiredLevel} 才能開啟房間唷 ♡`); render(); return;
+  }
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div');
+  s.className = "screen";
+  const header = document.createElement('div');
+  header.className = "header-row";
+  header.innerHTML = `<div class="back-btn" id="backBtn">←</div><h2>房間</h2>`;
+  s.appendChild(header);
+  const cur = roomById(STATE.equippedRoom);
+  const preview = document.createElement('div');
+  preview.className = "stat-card";
+  preview.style.textAlign = "center";
+  preview.innerHTML = `${roomStageHTML(Math.min(320, window.innerWidth-72))}<div style="font-size:14px; font-weight:800; color:var(--pink-deep); margin-top:8px;">${cur.name}</div>`;
+  s.appendChild(preview);
+  const pend = STATE.pendingRewards.find(id=> REWARD_GIFTS[id].type==="room");
+  if(pend){
+    const gb = document.createElement('div');
+    gb.className = "stat-card";
+    gb.style.cssText += "background:#FFF0F6; cursor:pointer; padding:10px 16px; font-weight:800; font-size:13px; color:var(--pink-deep); text-align:center;";
+    gb.textContent = "🎁 有房間禮物可以領取，點這裡領取";
+    gb.addEventListener('click', ()=> showGiftClaim(pend));
+    s.appendChild(gb);
+  }
+  const grid = document.createElement('div');
+  grid.className = "symbol-grid";
+  grid.style.gridTemplateColumns = "1fr 1fr";
+  s.appendChild(grid);
+  ROOMS.forEach(r=>{
+    const owned = roomOwned(r), eq = STATE.equippedRoom === r.id;
+    const card = document.createElement('div');
+    card.className = "symbol-card acc-card" + (eq ? " equipped" : "");
+    card.style.cssText += "aspect-ratio:auto; padding:10px 8px; gap:4px;";
+    let status = eq ? "✨ 使用中" : owned ? "點一下布置" : r.unlockType==="diamond" ? "🔒 💎"+r.price : roomObtain(r).text;
+    card.innerHTML = `
+      <img src="${r.image}" alt="${r.name}" style="width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:10px; border:2px solid #5B4A45; ${owned?'':'filter:grayscale(1) opacity(0.55);'}">
+      <div style="font-size:13px; font-weight:800; text-align:center;">${r.name}</div>
+      <div style="font-size:12px; color:var(--pink-deep); font-weight:800;">${status}</div>`;
+    card.addEventListener('click', ()=>{
+      if(owned){ if(!eq){ STATE.equippedRoom = r.id; saveState(); toast("房間換成" + r.name + "了 ♡"); refreshKeepScroll(); } return; }
+      if(r.unlockType === "level"){
+        if(giftStatus(r.rewardId) === "claimable") showGiftClaim(r.rewardId);
+        else toast(`這是 Lv.${r.requiredLevel} 的升級禮物，升到那個等級就能領取唷 ♡`);
+        return;
+      }
+      confirmDialog(`要用 ${r.price} 顆鑽石解鎖「${r.name}」嗎？`, ()=>{
+        const res = buyRoom(r.id);
+        if(res === "poor"){ toast("鑽石不夠唷，再多完成幾題吧 ♡"); return; }
+        if(res === "ok"){ STATE.equippedRoom = r.id; saveState(); toast("✨ 解鎖了！已經布置好房間"); refreshKeepScroll(); }
+      });
+    });
+    grid.appendChild(card);
+  });
+  app.appendChild(s);
+  header.querySelector('#backBtn').addEventListener('click', ()=> go('princess'));
+  attachGear(app);
+}
+
+/* ---------------- 小兔兔 ---------------- */
+function bunnyLine(){
+  const h = bunnyHearts();
+  const pool = h >= 4 ? ["最喜歡你了 ♡", "你是最棒的小公主！", "我們一起學注音，好開心 ♡"]
+             : h >= 2 ? ["一起學注音吧 ♡", "你好厲害！", "今天也一起玩吧！"]
+             : ["你好呀 ♡", "我是小兔兔，請多指教！", "可以陪我玩嗎？"];
+  return pickRandom(pool);
+}
+function renderBunny(){
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div');
+  s.className = "screen";
+  const header = document.createElement('div');
+  header.className = "header-row";
+  header.innerHTML = `<div class="back-btn" id="backBtn">←</div><h2>小兔兔</h2>`;
+  s.appendChild(header);
+  bunnyState();
+  const hearts = bunnyHearts(), aff = STATE.bunny.affection;
+  const card = document.createElement('div');
+  card.className = "stat-card";
+  card.style.cssText += "text-align:center; background:linear-gradient(180deg,#E6F7EE 0%,#FFF8EF 75%);";
+  card.innerHTML = `
+    <div id="bunnyBox" style="width:170px; margin:4px auto 0;"><img id="bunnyImg" src="${bunnyImage()}" alt="小兔兔" style="width:100%; display:block;"></div>
+    <div id="bunnyTalk" class="feedback-msg" style="min-height:22px;">${bunnyLine()}</div>
+    <div style="font-size:22px; letter-spacing:4px; margin-top:4px;">${[0,1,2,3,4].map(i=> i<hearts ? "💗" : "🤍").join("")}</div>
+    <div class="hold-progress" style="margin-top:6px;"><div class="fill" style="width:${aff}%;"></div></div>
+    <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-top:6px;">好感度 ${aff} / ${BUNNY_MAX}${aff < BUNNY_BOW_AT ? `　·　好感度 ${BUNNY_BOW_AT} 會戴上蝴蝶結 🎀` : `　·　🎀 已戴上蝴蝶結`}</div>`;
+  s.appendChild(card);
+  const row = document.createElement('div');
+  row.className = "options";
+  row.style.gridTemplateColumns = "1fr 1fr";
+  const canFeed = bunnyCanFeed(), left = bunnyPetsLeft();
+  row.innerHTML = `
+    <button class="opt-btn" id="feedBtn" ${canFeed?'':'disabled style="opacity:.55;"'}>🥕 餵紅蘿蔔<br><span style="font-size:11px;">${canFeed ? "今天還沒餵" : "今天吃飽了"}</span></button>
+    <button class="opt-btn" id="petBtn" ${left?'':'disabled style="opacity:.55;"'}>🤗 摸摸<br><span style="font-size:11px;">今天還能摸 ${left} 次</span></button>`;
+  s.appendChild(row);
+  const tip = document.createElement('div');
+  tip.className = "qprompt";
+  tip.style.cssText += "font-size:12px; margin-top:12px;";
+  tip.textContent = "每天來看看小兔兔，好感度會慢慢變高唷 ♡";
+  s.appendChild(tip);
+  app.appendChild(s);
+  header.querySelector('#backBtn').addEventListener('click', ()=> go('princess'));
+  function hop(msg){
+    const img = s.querySelector('#bunnyImg'); img.style.animation = "none"; void img.offsetWidth; img.style.animation = "bunnyHop .5s";
+    s.querySelector('#bunnyTalk').textContent = msg;
+  }
+  s.querySelector('#bunnyBox').addEventListener('click', ()=> hop(bunnyLine()));
+  const stay = (msg, bow0)=>{
+    // 重新繪製但保留說話內容
+    refreshKeepScroll();
+    setTimeout(()=>{ const t = document.querySelector('#bunnyTalk'); if(t) t.textContent = msg; const i = document.querySelector('#bunnyImg'); if(i){ i.style.animation = "bunnyHop .5s"; } if(!bow0 && STATE.bunny.affection >= BUNNY_BOW_AT) toast("🎀 小兔兔戴上蝴蝶結了！"); }, 0);
+  };
+  s.querySelector('#feedBtn').addEventListener('click', ()=>{ const b0 = STATE.bunny.affection >= BUNNY_BOW_AT; if(feedBunny()) stay("好好吃！謝謝你 ♡", b0); });
+  s.querySelector('#petBtn').addEventListener('click', ()=>{ const b0 = STATE.bunny.affection >= BUNNY_BOW_AT; if(petBunny()) stay(pickRandom(["好舒服～ ♡","嘿嘿，最喜歡了！","再摸一下嘛 ♡"]), b0); });
   attachGear(app);
 }
 

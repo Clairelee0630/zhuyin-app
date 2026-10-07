@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+<defs><linearGradient id="ns" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B2A6E"/><stop offset="1" stop-color="#6A4C9C"/></linearGradient></defs>
+<rect width="400" height="300" fill="url(#ns)"/>
+<circle cx="30" cy="30" r="2" fill="#FFF3A8"/><circle cx="80" cy="70" r="3" fill="#FFF3A8"/><circle cx="130" cy="25" r="2" fill="#FFF3A8"/><circle cx="190" cy="60" r="3" fill="#FFF3A8"/><circle cx="250" cy="28" r="2" fill="#FFF3A8"/><circle cx="300" cy="80" r="3" fill="#FFF3A8"/><circle cx="350" cy="35" r="2" fill="#FFF3A8"/><circle cx="60" cy="130" r="2" fill="#FFF3A8"/><circle cx="110" cy="160" r="3" fill="#FFF3A8"/><circle cx="330" cy="140" r="2" fill="#FFF3A8"/><circle cx="370" cy="100" r="3" fill="#FFF3A8"/><circle cx="270" cy="150" r="2" fill="#FFF3A8"/><circle cx="20" cy="180" r="2" fill="#FFF3A8"/><circle cx="225" cy="120" r="2" fill="#FFF3A8"/>
+<g fill="#FFE066" stroke="#FFF3A8" stroke-width="1"><polygon points="160,91 163,97 169,97 164,101 166,108 160,104 154,108 156,101 151,97 157,97"/><polygon points="320,41 323,47 329,47 324,51 326,58 320,54 314,58 316,51 311,47 317,47"/><polygon points="70,86 73,92 79,92 74,96 76,103 70,99 64,103 66,96 61,92 67,92"/><polygon points="285,101 288,107 294,107 289,111 291,118 285,114 279,118 281,111 276,107 282,107"/></g>
+<path d="M60 160 a42 42 0 1 0 38 62 a34 34 0 1 1 -38 -62z" fill="#FFE9A0" stroke="#5B4A45" stroke-width="3" transform="translate(15 -100)"/>
+<rect y="205" width="400" height="95" fill="#4B3A86"/>
+<path d="M0 205H400" stroke="#8C74D1" stroke-width="4"/>
+<g fill="#6A55A8" opacity=".7"><circle cx="40" cy="235" r="3"/><circle cx="120" cy="270" r="3"/><circle cx="200" cy="240" r="3"/><circle cx="280" cy="280" r="3"/><circle cx="350" cy="245" r="3"/><circle cx="80" cy="290" r="3"/><circle cx="330" cy="290" r="3"/></g>
+<ellipse cx="200" cy="262" rx="150" ry="26" fill="#8C74D1" stroke="#5B4A45" stroke-width="3"/>
+<ellipse cx="200" cy="262" rx="112" ry="18" fill="#B7A2F0"/>
+<g fill="#FFE066"><circle cx="150" cy="262" r="4"/><circle cx="200" cy="268" r="4"/><circle cx="250" cy="262" r="4"/></g></svg>

@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>注音樂園 ♡</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FFD9E6">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<link rel="icon" href="assets/icons/icon-192.png">
 <style>
   :root{
     --cream:#FFF8EF;
@@ -690,32 +694,86 @@ function defaultState(){
     ownedRooms:["room_pink"], equippedRoom:"room_pink",
     bunny:{ affection:0, fedDate:"", petDate:"", petCount:0 },
     // --- v5 新增欄位：每日公主任務 ---
-    quests:{ date:"", ids:[], claimed:[], bonus:false, rounds:{} }
+    quests:{ date:"", ids:[], claimed:[], bonus:false, rounds:{} },
+    // --- v6：資料保護 ---
+    schemaVersion:6, lastBackupAt:0
   };
 }
 let STATE = loadState();
+// 把任何來源的存檔（localStorage、匯入檔、自動備份）安全地併入預設值：只補欄位，不清除資料。
+function mergeState(parsed){
+  const merged = Object.assign(defaultState(), parsed);
+  // 巢狀物件也要做 additive merge，避免舊資料覆蓋掉新欄位
+  merged.gameStats = Object.assign({spellRounds:0, toneRounds:0, dailyRounds:0}, parsed.gameStats||{});
+  merged.symbolMastery = Array.isArray(parsed.symbolMastery) ? parsed.symbolMastery : [];
+  merged.specialItemsUnlocked = Array.isArray(parsed.specialItemsUnlocked) ? parsed.specialItemsUnlocked : [];
+  merged.claimedRewards = Array.isArray(parsed.claimedRewards) ? parsed.claimedRewards : [];
+  merged.pendingRewards = Array.isArray(parsed.pendingRewards) ? parsed.pendingRewards : [];
+  merged.unlockedOutfits = Array.isArray(parsed.unlockedOutfits) && parsed.unlockedOutfits.length ? parsed.unlockedOutfits : ["o1"];
+  merged.ownedAccessories = Array.isArray(parsed.ownedAccessories) ? parsed.ownedAccessories : ["acc_pink_bow"];
+  if(!merged.ownedAccessories.includes("acc_pink_bow")) merged.ownedAccessories.push("acc_pink_bow");
+  merged.implementedFeatures = Object.assign({accessories:false, room:false, bunny:false}, parsed.implementedFeatures||{});
+  merged.ownedRooms = Array.isArray(parsed.ownedRooms) ? parsed.ownedRooms : ["room_pink"];
+  if(!merged.ownedRooms.includes("room_pink")) merged.ownedRooms.push("room_pink");
+  if(!merged.ownedRooms.includes(merged.equippedRoom)) merged.equippedRoom = "room_pink";
+  merged.bunny = Object.assign({affection:0, fedDate:"", petDate:"", petCount:0}, parsed.bunny||{});
+  merged.quests = Object.assign({date:"", ids:[], claimed:[], bonus:false, rounds:{}}, parsed.quests||{});
+  merged.settings = Object.assign({bgMusic:true, sfx:true}, parsed.settings||{});
+  merged.schemaVersion = 6;
+  return merged;
+}
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return defaultState();
-    const parsed = JSON.parse(raw);
-    const merged = Object.assign(defaultState(), parsed);
-    // 巢狀物件也要做 additive merge，避免舊資料覆蓋掉新欄位
-    merged.gameStats = Object.assign({spellRounds:0, toneRounds:0, dailyRounds:0}, parsed.gameStats||{});
-    merged.symbolMastery = Array.isArray(parsed.symbolMastery) ? parsed.symbolMastery : [];
-    merged.specialItemsUnlocked = Array.isArray(parsed.specialItemsUnlocked) ? parsed.specialItemsUnlocked : [];
-    merged.claimedRewards = Array.isArray(parsed.claimedRewards) ? parsed.claimedRewards : [];
-    merged.pendingRewards = Array.isArray(parsed.pendingRewards) ? parsed.pendingRewards : [];
-    merged.ownedAccessories = Array.isArray(parsed.ownedAccessories) ? parsed.ownedAccessories : ["acc_pink_bow"];
-    if(!merged.ownedAccessories.includes("acc_pink_bow")) merged.ownedAccessories.push("acc_pink_bow");
-    merged.implementedFeatures = Object.assign({accessories:false, room:false, bunny:false}, parsed.implementedFeatures||{});
-    merged.ownedRooms = Array.isArray(parsed.ownedRooms) ? parsed.ownedRooms : ["room_pink"];
-    if(!merged.ownedRooms.includes("room_pink")) merged.ownedRooms.push("room_pink");
-    if(!merged.ownedRooms.includes(merged.equippedRoom)) merged.equippedRoom = "room_pink";
-    merged.bunny = Object.assign({affection:0, fedDate:"", petDate:"", petCount:0}, parsed.bunny||{});
-    merged.quests = Object.assign({date:"", ids:[], claimed:[], bonus:false, rounds:{}}, parsed.quests||{});
-    return merged;
+    return mergeState(JSON.parse(raw));
   }catch(e){ return defaultState(); }
+}
+// ===== 備份：匯出檔、自動備份、還原 =====
+const BACKUP_AUTO_KEY = "zhuyin_app_backup_auto";   // 每天第一次開啟時自動留一份
+const BACKUP_PRE_KEY  = "zhuyin_app_backup_pre";    // 匯入／重設前自動留一份
+function stateHasProgress(s){ return !!s && ((s.stars||0) > 0 || (s.gems||0) > 0 || Object.keys(s.practiceLog||{}).length > 0); }
+function snapshotState(key){
+  try{ if(!stateHasProgress(STATE)) return false; localStorage.setItem(key, JSON.stringify({ts:Date.now(), day:todayStr(), data:STATE})); return true; }catch(e){ return false; }
+}
+function readSnapshot(key){
+  try{ const o = JSON.parse(localStorage.getItem(key)||"null"); return (o && o.data && typeof o.data === "object") ? o : null; }catch(e){ return null; }
+}
+function autoBackupDaily(){
+  const a = readSnapshot(BACKUP_AUTO_KEY);
+  if(!a || a.day !== todayStr()) snapshotState(BACKUP_AUTO_KEY);
+}
+function backupSummary(d){
+  const outfits = Array.isArray(d.unlockedOutfits) ? d.unlockedOutfits.length : 1;
+  const lv = princessLevelInfo(d.stars||0).lv;
+  return `⭐ ${d.stars||0}　💎 ${d.gems||0}　Lv.${lv}　洋裝 ${outfits} 件`;
+}
+function fmtTime(ts){ const d = new Date(ts); const p = n=>String(n).padStart(2,"0"); return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function exportBackup(){
+  const d = new Date(), p = n=>String(n).padStart(2,"0");
+  const payload = {app:"zhuyin-app", schemaVersion:6, exportedAt:d.toISOString(), data:STATE};
+  const blob = new Blob([JSON.stringify(payload)], {type:"application/json"});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `zhuyin-backup-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  STATE.lastBackupAt = Date.now(); saveState();
+}
+// 檢查匯入檔格式；通過回傳 {ok:true, data}，否則回傳 {ok:false, msg}
+function validateBackup(obj){
+  if(!obj || typeof obj !== "object") return {ok:false, msg:"這不是正確的備份檔"};
+  if(obj.app !== "zhuyin-app") return {ok:false, msg:"這不是「注音樂園」的備份檔"};
+  const d = obj.data;
+  if(!d || typeof d !== "object" || Array.isArray(d)) return {ok:false, msg:"備份檔裡沒有存檔資料"};
+  if(!Number.isFinite(d.stars) || !Number.isFinite(d.gems) || d.stars < 0 || d.gems < 0) return {ok:false, msg:"備份檔的星星或鑽石資料不正確"};
+  if((obj.schemaVersion||0) > 6) return {ok:false, msg:"這份備份來自比較新的版本，請先更新 App"};
+  return {ok:true, data:d};
+}
+function applyState(data){
+  STATE = mergeState(data);
+  migrateLevelScaleV2(); migrateRewardsV3(); ensureQuests(); checkGameAchievements();
+  saveState();
 }
 // 新舊公主等級門檻不同，既有使用者的星星/鑽石/紀錄完全保留，
 // 只依「目前星星數」重新對應一次新等級，不重置任何資料。
@@ -805,6 +863,7 @@ const FEATURES = {
   accessories:{icon:"🎀", name:"飾品",   implemented:true,  requiredLevel:2},
   room:       {icon:"🏠", name:"房間",   implemented:true,  requiredLevel:3},
   bunny:      {icon:"🐰", name:"小兔兔", implemented:true,  requiredLevel:0},
+  castle:     {icon:"🏰", name:"城堡",   implemented:true,  requiredLevel:6},
 };
 function featureFlags(){ const o={}; Object.keys(FEATURES).forEach(k=>o[k]=FEATURES[k].implemented); return o; }
 function curLevel(){ return princessLevelInfo(STATE.stars).lv; } // 永遠由星星即時推算
@@ -813,6 +872,7 @@ function featureStatus(key){
   const f = FEATURES[key];
   if(!f.implemented) return "soon";
   if(f.requiredLevel > 0 && curLevel() < f.requiredLevel) return "locked";
+  if(key === "castle" && !STATE.claimedRewards.includes("r_castle")) return "gift"; // 等級到了，但要先領取夢幻城堡
   return "open";
 }
 const SOON_MSG = "這裡正在準備新的公主玩法 ♡";
@@ -847,7 +907,7 @@ const REWARD_GIFTS = {
 function giftImplemented(g){
   if(g.type === "accessory" || g.type === "outfit") return true;
   if(g.type === "room") return FEATURES.room.implemented;
-  return false; // castle
+  return g.type === "castle" ? FEATURES.castle.implemented : false;
 }
 // "claimed" 已取得 / "claimable" 可領取 / "soon" 已達成但功能未開發 / "locked" 等級未到
 function giftStatus(id){
@@ -871,6 +931,7 @@ function claimReward(id){
   if(g.type === "accessory" && !STATE.ownedAccessories.includes(g.itemId)) STATE.ownedAccessories.push(g.itemId);
   if(g.type === "outfit" && !STATE.unlockedOutfits.includes(g.itemId)) STATE.unlockedOutfits.push(g.itemId);
   if(g.type === "room" && !STATE.ownedRooms.includes(g.itemId)) STATE.ownedRooms.push(g.itemId);
+  if(g.type === "castle") STATE.castleLevel = Math.max(1, STATE.castleLevel||1);
   saveState();
   return true;
 }
@@ -911,6 +972,51 @@ const ACC_CATEGORIES = [
   {key:"crown", icon:"👑", label:"皇冠"},
   {key:"wand",  icon:"🪄", label:"魔法棒"},
 ];
+// ===== 城堡：領取「夢幻城堡」(Lv.6) 後開放，用 💎 逐級升級（Lv.1–6）=====
+const CASTLE_MAX = 6, CASTLE_COSTS = {1:40, 2:60, 3:80, 4:100, 5:150}; // 由該級升到下一級
+const CASTLE_STAGES = {1:"小小城堡", 2:"雙塔城堡", 3:"城牆城堡", 4:"花園城堡", 5:"高塔城堡", 6:"夢幻城堡"};
+const CASTLE_NEW = {2:"新增兩座小塔", 3:"新增城牆和城門", 4:"新增彩虹、花朵和小樹", 5:"中間長出高塔，插滿旗子", 6:"金色屋頂、護城河和閃亮星星"};
+function castleLv(){ return Math.min(CASTLE_MAX, Math.max(1, STATE.castleLevel||1)); }
+function castleUpgrade(){
+  const lv = castleLv();
+  if(lv >= CASTLE_MAX) return "max";
+  if(!STATE.claimedRewards.includes("r_castle")) return "no";
+  const c = CASTLE_COSTS[lv];
+  if(STATE.gems < c) return "poor";
+  STATE.gems -= c; STATE.castleLevel = lv + 1; saveState(); return "ok";
+}
+function castleSVG(lv){
+  const O = "#5B4A45", S = "#FFE9F2", S2 = "#FFD3E3", R = "#B79CF0", R2 = "#8E6FD8";
+  const crenel = (x,y,w,n)=> Array.from({length:n},(_,i)=>`<rect x="${x+i*(w/n)}" y="${y}" width="${w/n*0.6}" height="8" fill="${S}" stroke="${O}" stroke-width="2"/>`).join("");
+  const flag = (x,y,c,h=26)=>`<path d="M${x} ${y}V${y-h}" stroke="${O}" stroke-width="2.5"/><path d="M${x} ${y-h}l20 ${h*0.23} -20 ${h*0.27}z" fill="${c}" stroke="${O}" stroke-width="2" stroke-linejoin="round"/>`;
+  const roof = (cx,y,w,h,col)=>`<path d="M${cx-w/2-6} ${y} L${cx} ${y-h} L${cx+w/2+6} ${y}Z" fill="${col}" stroke="${O}" stroke-width="3" stroke-linejoin="round"/>`;
+  const win = (x,y)=>`<path d="M${x-6} ${y+14}V${y}a6 6 0 0 1 12 0V${y+14}Z" fill="#BFE8FF" stroke="${O}" stroke-width="2.2"/>`;
+  let g = `<defs><linearGradient id="csk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${lv>=6?'#CBB8FF':'#BDE9FF'}"/><stop offset="1" stop-color="#F6F0FF"/></linearGradient></defs>
+  <rect width="400" height="300" fill="url(#csk)"/>`;
+  g += `<g fill="#fff" stroke="${O}" stroke-width="2.5"><path d="M30 60q0-16 18-16q6-12 24-5q18-2 20 14q12 1 10 12H24q-8-2-8-5z"/><path d="M300 80q0-14 16-14q6-10 20-4q16-2 18 12q10 1 8 10H294q-7-2-6-4z"/></g>`;
+  if(lv>=4) g += `<g fill="none" stroke-width="9" stroke-linecap="round" opacity=".75"><path d="M40 150 Q200 -30 360 150" stroke="#FF9FBF"/><path d="M52 150 Q200 -10 348 150" stroke="#FFD36B"/><path d="M64 150 Q200 10 336 150" stroke="#9BE08F"/><path d="M76 150 Q200 30 324 150" stroke="#8FD3F4"/></g>`;
+  g += `<path d="M0 215 Q100 185 200 205 T400 195 V300 H0Z" fill="#A8E6A3" stroke="${O}" stroke-width="3"/><rect y="238" width="400" height="62" fill="#7FD07A"/>`;
+  if(lv>=6) g += `<path d="M0 262 Q100 250 200 262 T400 258 V300 H0Z" fill="#8FD3F4" stroke="${O}" stroke-width="3"/><g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"><path d="M40 280q10-5 20 0M150 284q10-5 20 0M270 280q10-5 20 0M330 290q10-5 20 0"/></g>`;
+  if(lv>=3){ g += `<rect x="58" y="188" width="284" height="52" fill="${S2}" stroke="${O}" stroke-width="3.5"/>${crenel(58,180,284,14)}`; }
+  if(lv>=2){
+    [[95],[305]].forEach(([cx])=>{ g += `<rect x="${cx-22}" y="150" width="44" height="90" fill="${S}" stroke="${O}" stroke-width="3.5"/>${crenel(cx-22,143,44,3)}${roof(cx,143,40,46,R)}${win(cx,172)}${lv>=5?flag(cx,97,"#FF9FBF"):""}`; });
+  }
+  if(lv>=5){ g += `<rect x="168" y="70" width="64" height="70" fill="${S}" stroke="${O}" stroke-width="3.5"/>${win(200,92)}`; }
+  g += `<rect x="146" y="${lv>=5?130:130}" width="108" height="110" fill="${S}" stroke="${O}" stroke-width="3.5"/>${crenel(146,122,108,5)}`;
+  if(lv>=5) g += roof(200,70,64,52,lv>=6?"#FFD04A":R) + flag(200,18,"#FF6FA5",14);
+  else g += roof(200,122,100,62,lv>=6?"#FFD04A":R) + flag(200,60,"#FF6FA5");
+  g += win(172,148)+win(228,148);
+  g += `<path d="M178 240V208a22 22 0 0 1 44 0V240Z" fill="#FFB36B" stroke="${O}" stroke-width="3.5"/><path d="M200 186V240" stroke="${O}" stroke-width="2"/><circle cx="192" cy="222" r="2.5" fill="${O}"/><circle cx="208" cy="222" r="2.5" fill="${O}"/>`;
+  g += `<path d="M200 158 C190 150 192 142 197 143 C199 143 200 145 200 146 C200 145 201 143 203 143 C208 142 210 150 200 158Z" fill="#FF6FA5" stroke="${O}" stroke-width="1.8"/>`;
+  if(lv>=4){
+    const fl=(x,y,c)=>`<g transform="translate(${x} ${y})"><path d="M0 0V16" stroke="#3E9C46" stroke-width="3"/>${[[0,-6],[6,0],[0,6],[-6,0]].map(([dx,dy])=>`<circle cx="${dx}" cy="${dy}" r="4.5" fill="${c}" stroke="${O}" stroke-width="1.5"/>`).join("")}<circle r="3.5" fill="#FFE066" stroke="${O}" stroke-width="1.5"/></g>`;
+    g += fl(40,250,"#FF9FBF")+fl(80,266,"#C9A8FF")+fl(330,252,"#FF9FBF")+fl(366,268,"#FFB36B")+fl(120,278,"#FF9FBF");
+    g += `<g transform="translate(20 175)"><rect x="-4" y="30" width="8" height="30" fill="#B07A45" stroke="${O}" stroke-width="2.5"/><circle cy="20" r="24" fill="#8EDB86" stroke="${O}" stroke-width="3"/></g><g transform="translate(380 180)"><rect x="-4" y="30" width="8" height="28" fill="#B07A45" stroke="${O}" stroke-width="2.5"/><circle cy="20" r="22" fill="#8EDB86" stroke="${O}" stroke-width="3"/></g>`;
+  }
+  if(lv>=6) g += [[60,40,3],[345,45,3.5],[290,20,2.5],[110,18,2.5],[240,30,2]].map(([x,y,r])=>`<polygon points="${x},${y-r*3} ${x+r},${y-r} ${x+r*3},${y} ${x+r},${y+r} ${x},${y+r*3} ${x-r},${y+r} ${x-r*3},${y} ${x-r},${y-r}" fill="#FFE27A" stroke="#fff" stroke-width="1"/>`).join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" style="display:block; width:100%; height:100%;">${g}</svg>`;
+}
+
 // ===== 房間（背景）：stage 上依序疊 房間背景 → 公主(含飾品) → 小兔兔 =====
 const ROOMS = [
   {id:"room_pink",   name:"粉紅小房間", image:"assets/rooms/room_pink.svg",   unlockType:"default", price:0},
@@ -1320,6 +1426,7 @@ function render(){
     case "accessories": renderAccessories(); break;
     case "room": renderRoom(); break;
     case "bunny": renderBunny(); break;
+    case "castle": renderCastle(); break;
     case "stats": renderStats(); break;
     case "parent-lock": renderParentLock(); break;
     case "parent": renderParent(); break;
@@ -2131,6 +2238,7 @@ function refreshKeepScroll(){ const y = window.scrollY; render(); window.scrollT
 function giftVisual(g, size){
   if(g.type === "accessory"){ const a = accById(g.itemId); return `<img src="${a.image}" alt="${g.name}" style="width:${size}px; height:${size}px; object-fit:contain; object-position:center;">`; }
   if(g.type === "outfit"){ const o = getOutfit(g.itemId); return `<img src="${o.image}" alt="${g.name}" style="width:${size}px; height:${size}px; object-fit:contain; object-position:center;">`; }
+  if(g.type === "castle") return `<div style="width:${Math.round(size*1.3)}px; height:${size}px; display:inline-block; border-radius:10px; overflow:hidden; border:2px solid #5B4A45;">${castleSVG(3)}</div>`;
   if(g.type === "room"){ const r = roomById(g.itemId); return `<img src="${r.image}" alt="${g.name}" style="width:${Math.round(size*1.3)}px; height:${size}px; object-fit:cover; border-radius:10px; border:2px solid #5B4A45;">`; }
   return `<span style="font-size:${Math.round(size*0.8)}px;">${g.icon}</span>`;
 }
@@ -2139,9 +2247,9 @@ function showClaimCelebration(id){
   const g = REWARD_GIFTS[id];
   const dirs = [[-90,-70],[90,-70],[-110,10],[110,10],[-60,80],[60,80],[0,-100],[0,95],[-40,-95],[40,-95]];
   const burst = dirs.map((d,k)=>`<span style="--dx:${d[0]}px; --dy:${d[1]}px; animation-delay:${k*0.03}s;">${k%2?'⭐':'✨'}</span>`).join('');
-  const isAcc = g.type === "accessory", isOutfit = g.type === "outfit", isRoom = g.type === "room";
+  const isAcc = g.type === "accessory", isOutfit = g.type === "outfit", isRoom = g.type === "room", isCastle = g.type === "castle";
   const a = isAcc ? accById(g.itemId) : null;
-  const wearLabel = isRoom ? "馬上布置" : isOutfit ? "馬上換上" : (a && a.slot === "hand" ? "馬上使用" : "馬上戴上");
+  const wearLabel = isCastle ? "去看城堡" : isRoom ? "馬上布置" : isOutfit ? "馬上換上" : (a && a.slot === "hand" ? "馬上使用" : "馬上戴上");
   const overlay = document.createElement('div');
   overlay.className = "confirm-overlay";
   overlay.innerHTML = `
@@ -2152,7 +2260,7 @@ function showClaimCelebration(id){
       <p style="margin-bottom:14px;">${g.name}</p>
       <div class="confirm-actions">
         <button class="action-btn secondary" id="celOk" style="margin:0; white-space:nowrap;">好的</button>
-        ${(isAcc || isOutfit || isRoom) ? `<button class="action-btn primary" id="celWear" style="margin:0; white-space:nowrap; padding-left:10px; padding-right:10px;">${wearLabel}</button>` : ``}
+        ${(isAcc || isOutfit || isRoom || isCastle) ? `<button class="action-btn primary" id="celWear" style="margin:0; white-space:nowrap; padding-left:10px; padding-right:10px;">${wearLabel}</button>` : ``}
       </div>
     </div>`;
   document.body.appendChild(overlay);
@@ -2165,7 +2273,8 @@ function showClaimCelebration(id){
   overlay.querySelector('#celOk').addEventListener('click', ()=> done());
   const w = overlay.querySelector('#celWear');
   if(w) w.addEventListener('click', ()=> done(()=>{
-    if(isRoom){ STATE.equippedRoom = g.itemId; saveState(); toast("房間換成" + g.name + "了 ♡"); }
+    if(isCastle){ go('castle'); }
+    else if(isRoom){ STATE.equippedRoom = g.itemId; saveState(); toast("房間換成" + g.name + "了 ♡"); }
     else if(isOutfit){ STATE.equippedOutfit = g.itemId; saveState(); toast(g.name + " 換好了 ♡"); }
     else { equipAccessory(g.itemId); toast(g.name + (a.slot==='hand' ? " 拿在手上了 ♡" : " 戴好了 ♡")); }
   }));
@@ -2197,7 +2306,7 @@ function showGiftClaim(onlyId){
 }
 function featureTileHTML(key, colorCls){
   const f = FEATURES[key], st = featureStatus(key);
-  const badge = st === "soon" ? `<div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:2px;">🚧 即將開放</div>`
+  const badge = st === "gift" ? `<div style="font-size:11px; font-weight:800; color:var(--pink-deep); margin-top:2px;">🎁 可領取</div>` : st === "soon" ? `<div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:2px;">🚧 即將開放</div>`
               : st === "locked" ? `<div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:2px;">🔒 Lv.${f.requiredLevel} 解鎖</div>` : ``;
   return `<div class="tile ${colorCls}" data-feature="${key}" data-fstate="${st}"><div class="emoji">${f.icon}</div><div class="label">${f.name}</div>${badge}</div>`;
 }
@@ -2285,7 +2394,8 @@ function renderPrincess(){
     ${featureTileHTML("accessories","c-butter")}
     ${featureTileHTML("room","c-lav")}
     ${featureTileHTML("bunny","c-mint")}
-    <div class="tile wide c-pink" data-go="album"><div class="emoji">🏆</div><div class="label">收藏冊</div></div>
+    ${featureTileHTML("castle","c-butter")}
+    <div class="tile c-pink" data-go="album"><div class="emoji">🏆</div><div class="label">收藏冊</div></div>
   `;
   s.appendChild(grid);
 
@@ -2297,6 +2407,7 @@ function renderPrincess(){
     const key = el.getAttribute('data-feature'), st = el.getAttribute('data-fstate');
     el.addEventListener('click', ()=>{
       if(st === "open") go(key);
+      else if(st === "gift") showGiftClaim("r_castle");
       else if(st === "locked") toast(`要升到 Lv.${FEATURES[key].requiredLevel} 才能開啟${FEATURES[key].name}唷 ♡`);
       else toast(SOON_MSG);
     });
@@ -2407,7 +2518,8 @@ function renderAlbum(){
   // 🔓 公主成長解鎖：只放「功能」；只有真正能操作的才顯示「已開放」
   section("🔓 公主成長解鎖", Object.keys(FEATURES).map(k=>{
     const f = FEATURES[k], st = featureStatus(k);
-    if(st === "open")   return albumRow(f.icon, f.name, "✓ 已開放", "got");
+    if(st === "open")   return albumRow(f.icon, f.name, k==="castle" ? `✓ 已開放（${CASTLE_STAGES[castleLv()]} Lv.${castleLv()}）` : "✓ 已開放", "got");
+    if(st === "gift")   return albumRow(f.icon, f.name, "🎁 可領取", "gift", "r_castle");
     if(st === "locked") return albumRow(f.icon, f.name, `🔒 Lv.${f.requiredLevel} 解鎖`, "locked");
     return albumRow(f.icon, f.name, "🚧 即將開放", "soon");
   }).join(""));
@@ -2622,6 +2734,55 @@ function renderRoom(){
   });
   app.appendChild(s);
   header.querySelector('#backBtn').addEventListener('click', ()=> go('princess'));
+  attachGear(app);
+}
+
+/* ---------------- 城堡 ---------------- */
+function renderCastle(){
+  if(featureStatus("castle") !== "open"){
+    ROUTE = {name:"princess"};
+    toast(curLevel() < FEATURES.castle.requiredLevel ? `要升到 Lv.${FEATURES.castle.requiredLevel} 才能開啟城堡唷 ♡` : "先到公主頁領取夢幻城堡禮物唷 ♡");
+    render(); return;
+  }
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div');
+  s.className = "screen";
+  const header = document.createElement('div');
+  header.className = "header-row";
+  header.innerHTML = `<div class="back-btn" id="backBtn">←</div><h2>我的城堡</h2>`;
+  s.appendChild(header);
+  const lv = castleLv();
+  const card = document.createElement('div');
+  card.className = "stat-card";
+  card.style.textAlign = "center";
+  card.innerHTML = `
+    <div style="width:min(340px, 100%); aspect-ratio:4/3; margin:0 auto; border-radius:18px; overflow:hidden; border:3px solid #5B4A45;">${castleSVG(lv)}</div>
+    <div style="font-size:15px; font-weight:800; color:var(--pink-deep); margin-top:10px;">🏰 ${CASTLE_STAGES[lv]}　Lv.${lv}${lv>=CASTLE_MAX?"（最高等級）":""}</div>
+    <div style="font-size:22px; letter-spacing:3px; margin-top:4px;">${Array.from({length:CASTLE_MAX},(_,i)=> i<lv ? "🏰" : "▫️").join("")}</div>`;
+  s.appendChild(card);
+  const up = document.createElement('div');
+  up.className = "stat-card";
+  up.style.textAlign = "center";
+  if(lv < CASTLE_MAX){
+    const cost = CASTLE_COSTS[lv];
+    up.innerHTML = `
+      <div style="font-size:13px; font-weight:800; color:var(--ink);">升到 Lv.${lv+1}：${CASTLE_STAGES[lv+1]}</div>
+      <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin:4px 0 10px;">${CASTLE_NEW[lv+1]}</div>
+      <div class="action-btn primary" id="castleUp" style="margin:0 auto; width:auto; display:inline-block; padding:10px 22px; ${STATE.gems>=cost?'':'opacity:.6;'}">用 💎${cost} 升級城堡</div>`;
+  } else {
+    up.innerHTML = `<div style="font-size:14px; font-weight:800; color:var(--pink-deep);">✨ 夢幻城堡完成了！</div><div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-top:4px;">公主和小兔兔都好喜歡這裡 ♡</div>`;
+  }
+  s.appendChild(up);
+  app.appendChild(s);
+  header.querySelector('#backBtn').addEventListener('click', ()=> go('princess'));
+  const btn = s.querySelector('#castleUp');
+  if(btn) btn.addEventListener('click', ()=>{
+    confirmDialog(`要用 ${CASTLE_COSTS[lv]} 顆鑽石升級城堡嗎？`, ()=>{
+      const r = castleUpgrade();
+      if(r === "poor"){ toast("鑽石不夠唷，再多完成幾題吧 ♡"); return; }
+      if(r === "ok"){ toast(`✨ 城堡升級成${CASTLE_STAGES[castleLv()]}了！`); refreshKeepScroll(); }
+    });
+  });
   attachGear(app);
 }
 
@@ -2893,6 +3054,16 @@ function renderParent(){
     <div class="setting-row"><div class="label">音效</div><div class="switch ${STATE.settings.sfx?'on':''}" id="sfxToggle"><div class="knob"></div></div></div>
     <div class="action-btn secondary" id="testTtsBtn">🔊 測試詞語語音</div>
     <div class="action-btn secondary" id="statsBtn">查看學習統計</div>
+    <div class="cat-label">資料備份</div>
+    <div class="stat-card" style="font-size:12px; color:var(--ink-soft); line-height:1.7; text-align:left;">
+      資料只存在這支手機的瀏覽器裡。換手機、清除瀏覽器資料之前，請先匯出備份。<br>
+      上次匯出：<b>${STATE.lastBackupAt ? fmtTime(STATE.lastBackupAt) : "還沒有匯出過"}</b>
+    </div>
+    <div class="action-btn primary" id="exportBtn">💾 匯出備份檔</div>
+    <div class="action-btn secondary" id="importBtn">📂 匯入備份檔</div>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+    <div class="action-btn secondary" id="restoreBtn">🕘 還原自動備份</div>
+    <div class="cat-label">清除資料</div>
     <div class="action-btn secondary" id="clearTodayBtn">清除今日紀錄</div>
     <div class="danger-btn" id="resetAllBtn">重設全部學習紀錄</div>
     <div class="cat-label">資料來源</div>
@@ -2928,12 +3099,56 @@ function renderParent(){
     });
   });
   s.querySelector('#resetAllBtn').addEventListener('click', ()=>{
-    confirmDialog("這會刪除所有星星與學習紀錄，確定要重設嗎？", ()=>{
-      STATE = defaultState();
-      saveState();
-      toast("已重設所有紀錄");
-      go('home');
+    confirmDialog(`這會刪除所有星星、鑽石、洋裝與學習紀錄！<br><span style="font-size:12px;">目前：${backupSummary(STATE)}<br>建議先按上面的「匯出備份檔」。</span><br>確定要重設嗎？`, ()=>{
+      confirmDialog("真的要全部重設嗎？重設後只能用「還原自動備份」找回。", ()=>{
+        snapshotState(BACKUP_PRE_KEY);
+        STATE = defaultState();
+        saveState();
+        toast("已重設所有紀錄");
+        go('home');
+      });
     });
+  });
+  s.querySelector('#exportBtn').addEventListener('click', ()=>{ exportBackup(); toast("備份檔已下載 ♡ 請收好這個檔案"); setTimeout(render, 300); });
+  const fileIn = s.querySelector('#importFile');
+  s.querySelector('#importBtn').addEventListener('click', ()=> fileIn.click());
+  fileIn.addEventListener('change', ()=>{
+    const f = fileIn.files && fileIn.files[0]; if(!f) return;
+    const rd = new FileReader();
+    rd.onload = ()=>{
+      let obj = null;
+      try{ obj = JSON.parse(rd.result); }catch(e){ toast("這個檔案打不開，請選備份用的 .json 檔"); fileIn.value = ""; return; }
+      const v = validateBackup(obj);
+      if(!v.ok){ toast(v.msg); fileIn.value = ""; return; }
+      confirmDialog(`要用這份備份取代目前的資料嗎？<br><span style="font-size:12px;">備份內容：${backupSummary(v.data)}<br>目前資料：${backupSummary(STATE)}<br>取代前會先自動留一份目前的備份。</span>`, ()=>{
+        snapshotState(BACKUP_PRE_KEY);
+        applyState(v.data);
+        toast("匯入完成 ♡");
+        go('home');
+      });
+      fileIn.value = "";
+    };
+    rd.onerror = ()=> toast("讀取檔案失敗，請再試一次");
+    rd.readAsText(f);
+  });
+  s.querySelector('#restoreBtn').addEventListener('click', ()=>{
+    const list = [["每日自動備份", readSnapshot(BACKUP_AUTO_KEY), BACKUP_AUTO_KEY], ["匯入／重設前的備份", readSnapshot(BACKUP_PRE_KEY), BACKUP_PRE_KEY]].filter(x=>x[1]);
+    if(!list.length){ toast("目前還沒有自動備份"); return; }
+    const overlay = document.createElement('div');
+    overlay.className = "confirm-overlay";
+    overlay.innerHTML = `<div class="confirm-box"><p style="font-weight:800;">選擇要還原的備份</p>` +
+      list.map((x,i)=>`<div class="action-btn secondary" data-i="${i}" style="margin:8px 0; text-align:left; font-size:13px;"><b>${x[0]}</b><br>${fmtTime(x[1].ts)}<br>${backupSummary(x[1].data)}</div>`).join("") +
+      `<div class="action-btn secondary" id="rsCancel" style="margin:8px 0 0;">取消</div></div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#rsCancel').addEventListener('click', ()=> overlay.remove());
+    overlay.querySelectorAll('[data-i]').forEach(el=> el.addEventListener('click', ()=>{
+      const x = list[+el.getAttribute('data-i')]; overlay.remove();
+      confirmDialog(`要還原到 ${fmtTime(x[1].ts)} 的備份嗎？<br><span style="font-size:12px;">${backupSummary(x[1].data)}</span>`, ()=>{
+        const keep = x[1].data;
+        if(x[2] !== BACKUP_PRE_KEY) snapshotState(BACKUP_PRE_KEY);
+        applyState(keep); toast("已還原 ♡"); go('home');
+      });
+    }));
   });
 }
 
@@ -2961,7 +3176,13 @@ ensureDailyFresh(); ensureQuests();
 migrateLevelScaleV2();
 migrateRewardsV3();
 checkGameAchievements(); saveState();
+autoBackupDaily();
 render();
+// 請瀏覽器盡量不要自動清除這份資料；並註冊離線快取（本機 file:// 預覽時略過）
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', ()=>{ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); });
+}
 </script>
 </body>
 </html>

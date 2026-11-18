@@ -191,6 +191,9 @@
   .rd-q{padding:16px 14px; text-align:center;}
   .rd-pic{font-size:64px; line-height:1.2;}
   .rd-stem{font-size:26px; font-weight:800; margin:4px 0 8px;}
+  .rd-guide{background:#FFF3C4;border:2px solid #FFD66B;border-radius:20px;padding:16px;margin:10px 0;text-align:center;}
+  .rd-guide-t.rbtxt{font-size:18px;font-weight:800;color:#B07A00;}
+  .rd-guide-b.rbtxt{font-size:22px;font-weight:800;margin-top:6px;}
   .rd-ask.rbtxt{font-size:22px; line-height:2.3; font-weight:800;}
   .rd-label{text-align:center; margin:4px 0 10px; color:var(--pink-deep);}
   .rd-label.rbtxt{font-size:18px; font-weight:800; color:var(--pink-deep);}
@@ -1665,7 +1668,7 @@ function rdPrepQuestion(){
   RD.iopts = rdIntentOptions(q);
   RD.step = RD.mode === "careful" ? "intent" : "answer";
   if(RD.mode === "solo" && Math.random() < 0.3) RD.step = "intent";   // 獨立讀題：隨機穿插讀題理解
-  RD.tmp.askIntent = RD.step === "intent";
+  RD.tmp.askIntent = RD.step === "intent" && RD.mode !== "careful";   // 細心讀題只做「讀一讀」引導，不考選擇題
 }
 function rdStemHTML(q){
   let h = "";
@@ -1713,6 +1716,12 @@ function renderReadingPlay(){
   else rdFeedbackUI(body, q);
 }
 function rdIntentUI(body, q){
+  if(RD.mode === "careful"){
+    body.innerHTML = `<div class="rd-guide"><div class="rd-guide-t rbtxt">👀 ${rb("先讀一讀")}</div><div class="rd-guide-b rbtxt">${rb("這一題要我們：")}<br><b>${rb(RD_INTENTS[q.intent].text)}</b></div></div>
+      <div class="rd-actions"><button class="rd-btn main" id="gotBtn"><span class="rbtxt">${rb("我看懂了")}</span></button></div>`;
+    body.querySelector('#gotBtn').addEventListener('click', ()=>{ RD.step = "answer"; render(); });
+    return;
+  }
   body.innerHTML = `<div class="rd-label rbtxt">${rb("這一題要我們做什麼？")}</div><div class="rd-opts one" id="iopts"></div><div class="rd-msg rbtxt" id="imsg"></div>`;
   const wrap = body.querySelector('#iopts');
   RD.iopts.forEach(id=>{
@@ -1734,8 +1743,8 @@ function rdAnswerUI(body, q){
   const exam = RD.mode === "exam", careful = RD.mode === "careful";
   const syl = q.opts.every(o=>PURE_ZY.test(o));
   body.innerHTML = `<div class="rd-opts ${syl?'two':'one'}" id="aopts"></div>
-    ${RD.tmp.hint ? `<div class="rd-hint rbtxt">💡 ${rb(RD_INTENTS[q.intent].text)}</div>` : ``}
-    <div class="rd-actions">${careful && !RD.tmp.hint ? `<button class="rd-btn ghost" id="hintBtn"><span class="rbtxt">💡 ${rb("提示")}</span></button>` : ``}<button class="rd-btn main" id="okBtn" ${RD.sel.size?'':'disabled'}><span class="rbtxt">${rb(exam && RD.i === RD.qs.length-1 ? "交卷" : "確定")}</span></button></div>`;
+    ${(RD.tmp.hint || careful) ? `<div class="rd-hint rbtxt">💡 ${rb(RD_INTENTS[q.intent].text)}</div>` : ``}
+    <div class="rd-actions"><button class="rd-btn main" id="okBtn" ${RD.sel.size?'':'disabled'}><span class="rbtxt">${rb(exam && RD.i === RD.qs.length-1 ? "交卷" : "確定")}</span></button></div>`;
   const wrap = body.querySelector('#aopts');
   RD.order.forEach(idx=>{
     const b = document.createElement('button'); b.className = "rd-opt" + (RD.sel.has(idx) ? " sel" : ""); b.innerHTML = optHTML(q.opts[idx]);

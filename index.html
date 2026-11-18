@@ -101,6 +101,8 @@
   .home-sec{font-size:14px; font-weight:800; color:var(--pink-deep); margin:16px 4px 8px;}
   .hero + .home-sec{margin-top:4px;}
   .grid-home .tile:not(.row){padding:14px 8px;}
+  .grid-home.three{grid-template-columns:repeat(3,1fr); gap:10px;}
+  .grid-home.three .tile{padding:12px 4px; gap:6px;} .grid-home.three .tile .emoji{font-size:30px;} .grid-home.three .tile .label{font-size:13px;}
   .tile.c-pink{background:var(--pink);}
   .tile.c-lav{background:var(--lavender);}
   .tile.c-mint{background:var(--mint);}
@@ -3080,18 +3082,24 @@ function renderPrincess(){
     else if(claimQuestBonus()){ toast(`🎉 全部完成！額外 +💎${QUEST_BONUS_GEMS}`); refreshKeepScroll(); }
   });
   const grid = document.createElement('div');
-  grid.className = "grid-home";
-  grid.style.marginTop = "14px";
   grid.innerHTML = `
-    <div class="tile c-pink" data-go="dressup"><div class="emoji">👗</div><div class="label">換裝</div></div>
-    ${featureTileHTML("accessories","c-butter")}
-    ${featureTileHTML("room","c-lav")}
-    ${featureTileHTML("bunny","c-mint")}
-    ${featureTileHTML("castle","c-butter")}
-    <div class="tile c-mint" id="gardenTile"><div class="emoji">🌷</div><div class="label">秘密花園</div>${gUnlocked()?'':'<div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:2px;">🔒 讀題 10 題</div>'}</div>
-    <div class="tile c-lav" data-go="magic-album"><div class="emoji">📔</div><div class="label">魔法圖鑑</div></div>
-    <div class="tile c-pink" data-go="album"><div class="emoji">🏆</div><div class="label">收藏冊</div></div>
-  `;
+    <div class="home-sec">👗 打扮公主</div>
+    <div class="grid-home">
+      <div class="tile c-pink" data-go="dressup"><div class="emoji">👗</div><div class="label">換裝</div></div>
+      ${featureTileHTML("accessories","c-butter")}
+    </div>
+    <div class="home-sec">🏠 公主的家</div>
+    <div class="grid-home three">
+      ${featureTileHTML("room","c-lav")}
+      ${featureTileHTML("bunny","c-mint")}
+      ${featureTileHTML("castle","c-butter")}
+    </div>
+    <div class="home-sec">🌷 收集</div>
+    <div class="grid-home three">
+      <div class="tile c-mint" id="gardenTile"><div class="emoji">🌷</div><div class="label">秘密花園</div>${gUnlocked()?'':'<div class="tsub">🔒 讀題 10 題</div>'}</div>
+      <div class="tile c-lav" data-go="magic-album"><div class="emoji">📔</div><div class="label">魔法圖鑑</div></div>
+      <div class="tile c-pink" data-go="album"><div class="emoji">🏆</div><div class="label">收藏冊</div></div>
+    </div>`;
   s.appendChild(grid);
 
   app.appendChild(s);

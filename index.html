@@ -175,6 +175,50 @@
   .dot.filled{background:var(--pink-deep);}
   .qcounter{text-align:center; font-size:13px; color:var(--ink-soft); font-weight:700; margin-bottom:6px;}
 
+  /* ---------- 讀題魔法學院 ---------- */
+  .rbtxt{font-size:19px; font-weight:700; line-height:2.2; color:var(--ink);}
+  .rbtxt ruby{ruby-align:center;}
+  .rbtxt rt, .rd-hero rt{font-size:12px; font-weight:700; color:#8A6F68; letter-spacing:0;}
+  .zy{font-weight:800; letter-spacing:1px; font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;}
+  .zy.big{font-size:28px; letter-spacing:2px;}
+  .rd-hero{font-size:22px; text-align:center; margin:4px 0 14px; font-weight:800;}
+  .rd-hero.rbtxt{font-size:22px;}
+  .rd-card{display:flex; align-items:center; gap:14px; background:var(--white); border-radius:var(--radius-lg); padding:14px 16px; margin-bottom:12px; box-shadow:var(--shadow-flat); cursor:pointer;}
+  .rd-card:active{transform:scale(.97);}
+  .rd-card-ico{font-size:34px; width:44px; text-align:center;}
+  .rd-card-t.rbtxt{font-size:20px; font-weight:800;}
+  .rd-card-d.rbtxt{font-size:14px; color:var(--ink-soft);}
+  .rd-q{padding:16px 14px; text-align:center;}
+  .rd-pic{font-size:64px; line-height:1.2;}
+  .rd-stem{font-size:26px; font-weight:800; margin:4px 0 8px;}
+  .rd-ask.rbtxt{font-size:22px; line-height:2.3; font-weight:800;}
+  .rd-label{text-align:center; margin:4px 0 10px; color:var(--pink-deep);}
+  .rd-label.rbtxt{font-size:18px; font-weight:800; color:var(--pink-deep);}
+  .rd-opts{display:grid; gap:12px; margin-top:6px;}
+  .rd-opts.two{grid-template-columns:1fr 1fr;}
+  .rd-opts.one{grid-template-columns:1fr;}
+  .rd-opt{position:relative; background:var(--white); border-radius:var(--radius-md); padding:12px 10px; min-height:64px; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-flat); border:3px solid transparent; text-align:center;}
+  .rd-opt:active{transform:scale(.97);}
+  .rd-opt.sel{border-color:var(--pink-deep); background:#FFF0F6;}
+  .rd-opt.correct{background:var(--mint); border-color:#7FD9B6;}
+  .rd-opt.wrong{background:#FFE0E0; border-color:#FFAFAF;}
+  .rd-opt:disabled{opacity:.65;}
+  .rd-opt.static{cursor:default;}
+  .rd-mark{position:absolute; right:8px; top:4px; font-weight:800; font-size:16px;}
+  .rd-msg{min-height:28px; text-align:center; margin-top:10px; color:var(--pink-deep);}
+  .rd-msg{font-size:16px; font-weight:800; line-height:2;}
+  .rd-actions{display:flex; gap:10px; margin-top:16px;}
+  .rd-btn{flex:1; padding:14px 10px; border-radius:var(--radius-md); font-weight:800; font-size:16px; text-align:center;}
+  .rd-btn.main{background:var(--pink-deep); box-shadow:var(--shadow);}
+  .rd-btn.main .rbtxt, .rd-btn.main rt{color:#fff;}
+  .rd-btn.main:disabled{opacity:.45; box-shadow:none;}
+  .rd-btn.ghost{background:var(--white); box-shadow:var(--shadow-flat); flex:0 0 38%;}
+  .rd-hint{margin-top:12px; background:var(--butter); border-radius:var(--radius-md); padding:8px 12px; text-align:center;}
+  .rd-fb{margin-top:14px; border-radius:var(--radius-md); padding:12px 14px; background:var(--white); box-shadow:var(--shadow-flat);}
+  .rd-fb.good{border-left:6px solid #7FD9B6;} .rd-fb.bad{border-left:6px solid #FFAFAF;}
+  .rd-fb-t.rbtxt{font-weight:800; font-size:19px;} .rd-fb-w.rbtxt{font-size:17px; color:var(--ink-soft);}
+  .rd-wrong .rbtxt{font-size:17px;}
+
   /* ---------- result page ---------- */
   .result-card{
     background:var(--white); border-radius:var(--radius-lg); padding:30px 20px;
@@ -696,7 +740,9 @@ function defaultState(){
     // --- v5 新增欄位：每日公主任務 ---
     quests:{ date:"", ids:[], claimed:[], bonus:false, rounds:{} },
     // --- v6：資料保護 ---
-    schemaVersion:6, lastBackupAt:0
+    schemaVersion:7, lastBackupAt:0,
+    // --- v7：讀題魔法學院（與原本注音練習的統計分開記錄）---
+    reading:{ total:0, intent:{ok:0,wrong:0}, answer:{ok:0,wrong:0}, byIntent:{}, byCat:{}, byQ:{}, wrongIds:[], rounds:{careful:0,solo:0,exam:0}, exams:[], reward:{day:"",ids:[]} }
   };
 }
 let STATE = loadState();
@@ -719,7 +765,15 @@ function mergeState(parsed){
   merged.bunny = Object.assign({affection:0, fedDate:"", petDate:"", petCount:0}, parsed.bunny||{});
   merged.quests = Object.assign({date:"", ids:[], claimed:[], bonus:false, rounds:{}}, parsed.quests||{});
   merged.settings = Object.assign({bgMusic:true, sfx:true}, parsed.settings||{});
-  merged.schemaVersion = 6;
+  const rd0 = {total:0, intent:{ok:0,wrong:0}, answer:{ok:0,wrong:0}, byIntent:{}, byCat:{}, byQ:{}, wrongIds:[], rounds:{careful:0,solo:0,exam:0}, exams:[], reward:{day:"",ids:[]}};
+  const pr = parsed.reading || {};
+  merged.reading = Object.assign(rd0, pr);
+  ["intent","answer","rounds","byIntent","byCat","byQ","reward"].forEach(k=>{ merged.reading[k] = Object.assign({}, rd0[k], pr[k]||{}); });
+  merged.reading.intent = Object.assign({ok:0,wrong:0}, pr.intent||{}); merged.reading.answer = Object.assign({ok:0,wrong:0}, pr.answer||{});
+  merged.reading.rounds = Object.assign({careful:0,solo:0,exam:0}, pr.rounds||{});
+  merged.reading.reward = Object.assign({day:"",ids:[]}, pr.reward||{});
+  merged.reading.wrongIds = Array.isArray(pr.wrongIds) ? pr.wrongIds : []; merged.reading.exams = Array.isArray(pr.exams) ? pr.exams : [];
+  merged.schemaVersion = 7;
   return merged;
 }
 function loadState(){
@@ -751,7 +805,7 @@ function backupSummary(d){
 function fmtTime(ts){ const d = new Date(ts); const p = n=>String(n).padStart(2,"0"); return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
 function exportBackup(){
   const d = new Date(), p = n=>String(n).padStart(2,"0");
-  const payload = {app:"zhuyin-app", schemaVersion:6, exportedAt:d.toISOString(), data:STATE};
+  const payload = {app:"zhuyin-app", schemaVersion:7, exportedAt:d.toISOString(), data:STATE};
   const blob = new Blob([JSON.stringify(payload)], {type:"application/json"});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -767,7 +821,7 @@ function validateBackup(obj){
   const d = obj.data;
   if(!d || typeof d !== "object" || Array.isArray(d)) return {ok:false, msg:"備份檔裡沒有存檔資料"};
   if(!Number.isFinite(d.stars) || !Number.isFinite(d.gems) || d.stars < 0 || d.gems < 0) return {ok:false, msg:"備份檔的星星或鑽石資料不正確"};
-  if((obj.schemaVersion||0) > 6) return {ok:false, msg:"這份備份來自比較新的版本，請先更新 App"};
+  if((obj.schemaVersion||0) > 7) return {ok:false, msg:"這份備份來自比較新的版本，請先更新 App"};
   return {ok:true, data:d};
 }
 function applyState(data){
@@ -1428,6 +1482,10 @@ function render(){
     case "bunny": renderBunny(); break;
     case "castle": renderCastle(); break;
     case "stats": renderStats(); break;
+    case "reading": renderReadingMenu(); break;
+    case "reading-play": renderReadingPlay(); break;
+    case "reading-result": renderReadingResult(); break;
+    case "reading-stats": renderReadingStats(); break;
     case "parent-lock": renderParentLock(); break;
     case "parent": renderParent(); break;
     default: renderHome();
@@ -1450,6 +1508,336 @@ function attachGear(container){
   if(gear) gear.addEventListener('click', ()=> go('parent-lock'));
 }
 
+/* ============================================================
+   📚 讀題魔法學院：先看清楚題目 → 理解作答要求 → 再作答
+   - 不使用語音朗讀；所有給孩子讀的字都用「逐字注音」(rb)
+   ============================================================ */
+const RB_MISSING = new Set();
+const RB_DICT = {
+ "找":"ㄓㄠˇ","出":"ㄔㄨ","所":"ㄙㄨㄛˇ","有":"ㄧㄡˇ","二":"ㄦˋ","三":"ㄙㄢ","四":"ㄙˋ","一":"ㄧ","輕":"ㄑㄧㄥ","聲":"ㄕㄥ","的":"ㄉㄜ˙",
+ "注":"ㄓㄨˋ","音":"ㄧㄣ","選":"ㄒㄩㄢˇ","正":"ㄓㄥˋ","確":"ㄑㄩㄝˋ","答":"ㄉㄚˊ","案":"ㄢˋ","不":"ㄅㄨˋ","相":"ㄒㄧㄤ","同":"ㄊㄨㄥˊ",
+ "看":"ㄎㄢˋ","圖":"ㄊㄨˊ","拼":"ㄆㄧㄣ","只":"ㄓˇ","個":"ㄍㄜˋ","符":"ㄈㄨˊ","合":"ㄏㄜˊ","請":"ㄑㄧㄥˇ","下":"ㄒㄧㄚˋ","面":"ㄇㄧㄢˋ",
+ "哪":"ㄋㄚˇ","是":"ㄕˋ","樣":"ㄧㄤˋ","和":"ㄏㄜˊ","上":"ㄕㄤˋ","能":"ㄋㄥˊ","加":"ㄐㄧㄚ","再":"ㄗㄞˋ","這":"ㄓㄜˋ","第":"ㄉㄧˋ",
+ "幾":"ㄐㄧˇ","把":"ㄅㄚˇ","換":"ㄏㄨㄢˋ","成":"ㄔㄥˊ","會":"ㄏㄨㄟˋ","變":"ㄅㄧㄢˋ","適":"ㄕˋ","進":"ㄐㄧㄣˋ","詞":"ㄘˊ","語":"ㄩˇ",
+ "放":"ㄈㄤˋ","在":"ㄗㄞˋ","天":"ㄊㄧㄢ","飛":"ㄈㄟ","水":"ㄕㄨㄟˇ","裡":"ㄌㄧˇ","游":"ㄧㄡˊ","我":"ㄨㄛˇ","用":"ㄩㄥˋ","書":"ㄕㄨ",
+ "鳥":"ㄋㄧㄠˇ","魚":"ㄩˊ","牛":"ㄋㄧㄡˊ","眼":"ㄧㄢˇ","睛":"ㄐㄧㄥ","耳":"ㄦˇ","朵":"ㄉㄨㄛˇ","嘴":"ㄗㄨㄟˇ","話":"ㄏㄨㄚˋ","句":"ㄐㄩˋ",
+ "通":"ㄊㄨㄥ","順":"ㄕㄨㄣˋ","動":"ㄉㄨㄥˋ","物":"ㄨˋ","貓":"ㄇㄠ","杯":"ㄅㄟ","要":"ㄧㄠˋ","們":"ㄇㄣ˙","做":"ㄗㄨㄛˋ","什":"ㄕㄣˊ","麼":"ㄇㄜ˙",
+ "讀":"ㄉㄨˊ","題":"ㄊㄧˊ","再":"ㄗㄞˋ","次":"ㄘˋ","喔":"ㄛ","對":"ㄉㄨㄟˋ","囉":"ㄌㄨㄛ˙","想":"ㄒㄧㄤˇ","定":"ㄉㄧㄥˋ","提":"ㄊㄧˊ","示":"ㄕˋ",
+ "交":"ㄐㄧㄠ","卷":"ㄐㄩㄢˋ","成":"ㄔㄥˊ","績":"ㄐㄧˋ","錯":"ㄘㄨㄛˋ","重":"ㄔㄨㄥˊ","新":"ㄒㄧㄣ","練":"ㄌㄧㄢˋ","習":"ㄒㄧˊ","回":"ㄏㄨㄟˊ","首":"ㄕㄡˇ",
+ "頁":"ㄧㄝˋ","細":"ㄒㄧˋ","心":"ㄒㄧㄣ","獨":"ㄉㄨˊ","立":"ㄌㄧˋ","學":"ㄒㄩㄝˊ","校":"ㄒㄧㄠˋ","模":"ㄇㄛˊ","擬":"ㄋㄧˇ","考":"ㄎㄠˇ","魔":"ㄇㄛˊ",
+ "法":"ㄈㄚˇ","院":"ㄩㄢˋ","開":"ㄎㄞ","始":"ㄕˇ","先":"ㄒㄧㄢ","後":"ㄏㄡˋ","再":"ㄗㄞˋ","題":"ㄊㄧˊ","每":"ㄇㄟˇ","都":"ㄉㄡ","太":"ㄊㄞˋ","棒":"ㄅㄤˋ",
+ "了":"ㄌㄜ˙","答":"ㄉㄚˊ","全":"ㄑㄩㄢˊ","部":"ㄅㄨˋ","分":"ㄈㄣ","數":"ㄕㄨˋ","得":"ㄉㄜˊ","看":"ㄎㄢˋ","清":"ㄑㄧㄥ","楚":"ㄔㄨˇ","吧":"ㄅㄚ˙",
+ "好":"ㄏㄠˇ","小":"ㄒㄧㄠˇ","公":"ㄍㄨㄥ","主":"ㄓㄨˇ","今":"ㄐㄧㄣ","完":"ㄨㄢˊ","束":"ㄕㄨˋ","次":"ㄘˋ","沒":"ㄇㄟˊ","呢":"ㄋㄜ˙","問":"ㄨㄣˋ",
+ "意":"ㄧˋ","思":"ㄙ","因":"ㄧㄣ","為":"ㄨㄟˊ","說":"ㄕㄨㄛ","明":"ㄇㄧㄥˊ","要":"ㄧㄠˋ","求":"ㄑㄧㄡˊ","按":"ㄢˋ","點":"ㄇ",
+ "調":"ㄉㄧㄠˋ","號":"ㄏㄠˋ","其":"ㄑㄧˊ","他":"ㄊㄚ","以":"ㄧˇ","狗":"ㄍㄡˇ","羊":"ㄧㄤˊ","象":"ㄒㄧㄤˋ","括":"ㄎㄨㄛˋ","子":"ㄗ˙","目":"ㄇㄨˋ","作":"ㄗㄨㄛˋ","自":"ㄗˋ","己":"ㄐㄧˇ","直":"ㄓˊ","接":"ㄐㄧㄝ","十":"ㄕˊ","才":"ㄘㄞˊ","就":"ㄐㄧㄡˋ","玩":"ㄨㄢˊ",
+};
+RB_DICT["和"] = "ㄏㄢˋ";
+delete RB_DICT["點"];
+function zhDisp(s){ return s.endsWith("˙") ? "˙"+s.slice(0,-1) : s; }
+const ZY_RE = /[ㄅ-ㄩ˙ˊˇˋ]/;
+// 自動逐字標注音：{字|注音} 可指定特殊讀音
+function rb(text){
+  let out = "", i = 0;
+  while(i < text.length){
+    const ch = text[i];
+    if(ch === "{"){ const j = text.indexOf("}", i); const p = text.slice(i+1, j).split("|"); out += `<ruby>${p[0]}<rt>${zhDisp(p[1])}</rt></ruby>`; i = j+1; continue; }
+    if(ZY_RE.test(ch)){ let j = i; while(j < text.length && ZY_RE.test(text[j])) j++; out += `<span class="zy">${zhDisp(text.slice(i,j))}</span>`; i = j; continue; }
+    if(RB_DICT[ch]) out += `<ruby>${ch}<rt>${zhDisp(RB_DICT[ch])}</rt></ruby>`;
+    else { if(/[一-鿿]/.test(ch)) RB_MISSING.add(ch); out += ch === "\n" ? "<br>" : ch; }
+    i++;
+  }
+  return out;
+}
+const PURE_ZY = /^[ㄅ-ㄩ˙ˊˇˋ]+$/;
+function optHTML(o){ return PURE_ZY.test(o) ? `<span class="zy big">${zhDisp(o)}</span>` : `<span class="rbtxt">${rb(o)}</span>`; }
+
+const RD_INTENTS = {
+  t1:{text:"找出所有一聲的注音。", near:["t2","t3","tl"]},
+  t2:{text:"找出所有二聲的注音。", near:["t3","t4","t1"]},
+  t3:{text:"找出所有三聲的注音。", near:["t2","t4","notT3"]},
+  t4:{text:"找出所有四聲的注音。", near:["t3","t2","one4"]},
+  tl:{text:"找出所有輕聲的注音。", near:["t1","t2","all"]},
+  notT3:{text:"選出不是三聲的注音。", near:["t3","bad","t4"]},
+  one4:{text:"只選一個四聲的注音。", near:["t4","all","t2"]},
+  okOne:{text:"選出正確的答案。", near:["bad","diff","same"]},
+  bad:{text:"選出不正確的答案。", near:["okOne","same","diff"]},
+  same:{text:"選出相同的注音。", near:["diff","okOne","bad"]},
+  diff:{text:"選出不同的注音。", near:["same","bad","okOne"]},
+  pic:{text:"看圖，選出正確的注音。", near:["spell","okOne","toneWhich"]},
+  spell:{text:"拼拼看，選出正確的注音。", near:["swap","pic","toneWhich"]},
+  swap:{text:"把注音換一換，選出新的注音。", near:["spell","pic","okOne"]},
+  toneWhich:{text:"選出這個注音是第幾聲。", near:["t2","spell","pic"]},
+  all:{text:"選出所有符合的答案。", near:["one4","okOne","bad"]},
+  fillWord:{text:"選出適合放進括號的詞語。", near:["animal","badSentence","okOne"]},
+  badSentence:{text:"選出不通順的句子。", near:["fillWord","okOne","animal"]},
+  animal:{text:"選出是動物的詞語。", near:["fillWord","okOne","badSentence"]},
+};
+const RD_LESSON = "首冊 1–9 課 注音符號";
+const READING_BANK = [
+ // ── 仔細讀題理解（12）
+ {id:"rd01",cat:"read",intent:"t2",kind:"multi",ask:"請找出所有二聲的注音。",opts:["ㄇㄚˊ","ㄆㄚˇ","ㄉㄚˊ","ㄊㄚˋ","ㄋㄚ"],ans:[0,2],why:"二聲的注音有ㄇㄚˊ和ㄉㄚˊ。"},
+ {id:"rd02",cat:"read",intent:"t3",kind:"multi",ask:"請找出所有三聲的注音。",opts:["ㄍㄡˇ","ㄇㄠ","ㄋㄧㄡˊ","ㄌㄧˇ","ㄏㄨˇ"],ans:[0,3,4],why:"三聲的注音有ㄍㄡˇ、ㄌㄧˇ和ㄏㄨˇ。"},
+ {id:"rd03",cat:"read",intent:"t4",kind:"multi",ask:"請找出所有四聲的注音。",opts:["ㄉㄚˋ","ㄒㄧㄠˇ","ㄎㄢˋ","ㄇㄚˊ","ㄕㄨˋ"],ans:[0,2,4],why:"四聲的注音有ㄉㄚˋ、ㄎㄢˋ和ㄕㄨˋ。"},
+ {id:"rd04",cat:"read",intent:"t1",kind:"multi",ask:"請找出所有一聲的注音。",opts:["ㄉㄧㄢ","ㄊㄧㄢˊ","ㄕㄢ","ㄏㄨㄚˋ","ㄏㄨ"],ans:[0,2,4],why:"一聲的注音沒有聲調符號：ㄉㄧㄢ、ㄕㄢ和ㄏㄨ。"},
+ {id:"rd05",cat:"read",intent:"bad",kind:"single",ask:"下面哪一個拼音是不正確的？",opts:["ㄅ+ㄚ=ㄅㄚ","ㄆ+ㄚ=ㄆㄚ","ㄇ+ㄚ=ㄈㄚ"],ans:[2],why:"ㄇ加ㄚ是ㄇㄚ，不是ㄈㄚ。"},
+ {id:"rd06",cat:"read",intent:"okOne",kind:"single",ask:"下面哪一個拼音是正確的？",opts:["ㄌ+ㄧㄡ=ㄌㄧㄡ","ㄌ+ㄧㄡ=ㄋㄧㄡ","ㄌ+ㄧㄡ=ㄌㄧㄠ"],ans:[0],why:"ㄌ加ㄧㄡ是ㄌㄧㄡ。"},
+ {id:"rd07",cat:"read",intent:"diff",kind:"single",ask:"請選出不一樣的注音。",opts:["ㄅ","ㄅ","ㄆ","ㄅ"],ans:[2],why:"其他三個都是ㄅ，只有ㄆ不一樣。"},
+ {id:"rd08",cat:"read",intent:"same",kind:"single",stem:"ㄉ",ask:"請選出和上面相同的注音。",opts:["ㄊ","ㄉ","ㄋ"],ans:[1],why:"和上面的ㄉ一樣的是ㄉ。"},
+ {id:"rd09",cat:"read",intent:"notT3",kind:"single",ask:"下面哪一個不是三聲？",opts:["ㄇㄚˇ","ㄌㄧˇ","ㄏㄨˋ","ㄍㄡˇ"],ans:[2],why:"ㄏㄨˋ是四聲，其他都是三聲。"},
+ {id:"rd10",cat:"read",intent:"one4",kind:"single",ask:"請選出四聲的注音，只能選一個。",opts:["ㄇㄚˋ","ㄇㄚˊ","ㄇㄚˇ","ㄇㄚ"],ans:[0],why:"四聲的符號是ˋ，所以選ㄇㄚˋ。"},
+ {id:"rd11",cat:"read",intent:"tl",kind:"multi",ask:"請找出所有輕聲的注音。",opts:["ㄉㄜ˙","ㄇㄚ˙","ㄏㄜˊ","ㄅㄚˋ"],ans:[0,1],why:"輕聲的符號是˙，有ㄉㄜ˙和ㄇㄚ˙。"},
+ {id:"rd12",cat:"read",intent:"all",kind:"multi",ask:"請選出所有有「ㄚ」的注音。",opts:["ㄇㄚ","ㄆㄛ","ㄉㄚˊ","ㄍㄜ"],ans:[0,2],why:"有ㄚ的是ㄇㄚ和ㄉㄚˊ。"},
+ // ── 拼音與聲調（8）
+ {id:"rd13",cat:"pinyin",intent:"spell",kind:"single",stem:"ㄅ + ㄚ = ?",ask:"拼拼看，選出正確的注音。",opts:["ㄅㄚ","ㄆㄚ","ㄅㄛ"],ans:[0],why:"ㄅ加ㄚ是ㄅㄚ。"},
+ {id:"rd14",cat:"pinyin",intent:"spell",kind:"single",ask:"ㄇ加ㄠ，再加上二聲，是哪一個？",opts:["ㄇㄠˊ","ㄇㄠˇ","ㄇㄠˋ"],ans:[0],why:"二聲的符號是ˊ，所以是ㄇㄠˊ。"},
+ {id:"rd15",cat:"pinyin",intent:"spell",kind:"single",ask:"ㄍ加ㄡ，再加上三聲，是哪一個？",opts:["ㄍㄡˇ","ㄍㄡˊ","ㄍㄡˋ"],ans:[0],why:"三聲的符號是ˇ，所以是ㄍㄡˇ。"},
+ {id:"rd16",cat:"pinyin",intent:"spell",kind:"single",ask:"ㄋ加ㄧㄡ，再加上二聲，是哪一個？",opts:["ㄋㄧㄡˊ","ㄋㄧㄡˇ","ㄋㄧㄡ"],ans:[0],why:"二聲的符號是ˊ，所以是ㄋㄧㄡˊ。"},
+ {id:"rd17",cat:"pinyin",intent:"spell",kind:"single",ask:"ㄉ加ㄚ，再加上四聲，是哪一個？",opts:["ㄉㄚˋ","ㄉㄚˊ","ㄉㄚ"],ans:[0],why:"四聲的符號是ˋ，所以是ㄉㄚˋ。"},
+ {id:"rd18",cat:"pinyin",intent:"toneWhich",kind:"single",stem:"ㄇㄚˊ",ask:"這個注音是第幾聲？",opts:["一聲","二聲","三聲"],ans:[1],why:"ㄇㄚˊ有ˊ，是二聲。"},
+ {id:"rd19",cat:"pinyin",intent:"swap",kind:"single",stem:"ㄅㄚ",ask:"把ㄅ換成ㄆ，會變成哪一個？",opts:["ㄆㄚ","ㄅㄛ","ㄇㄚ"],ans:[0],why:"把ㄅ換成ㄆ，ㄚ不變，是ㄆㄚ。"},
+ {id:"rd20",cat:"pinyin",intent:"swap",kind:"single",stem:"ㄏㄚ",ask:"把ㄚ換成ㄜ，會變成哪一個？",opts:["ㄏㄜ","ㄍㄜ","ㄏㄨ"],ans:[0],why:"ㄏ不變，把ㄚ換成ㄜ，是ㄏㄜ。"},
+ // ── 看圖選注音（5）
+ {id:"rd21",cat:"pic",intent:"pic",kind:"single",pic:"🐱",ask:"看圖，選出正確的注音。",opts:["ㄇㄠ","ㄇㄠˇ","ㄇㄚ"],ans:[0],why:"貓的注音是ㄇㄠ。"},
+ {id:"rd22",cat:"pic",intent:"pic",kind:"single",pic:"🐶",ask:"看圖，選出正確的注音。",opts:["ㄍㄡˇ","ㄍㄡˊ","ㄎㄡˇ"],ans:[0],why:"狗的注音是ㄍㄡˇ。"},
+ {id:"rd23",cat:"pic",intent:"pic",kind:"single",pic:"🐮",ask:"看圖，選出正確的注音。",opts:["ㄋㄧㄡˊ","ㄋㄧㄡˇ","ㄌㄧㄡˊ"],ans:[0],why:"牛的注音是ㄋㄧㄡˊ。"},
+ {id:"rd24",cat:"pic",intent:"pic",kind:"single",pic:"🐑",ask:"看圖，選出正確的注音。",opts:["ㄧㄤˊ","ㄧㄤˇ","ㄧㄠˊ"],ans:[0],why:"羊的注音是ㄧㄤˊ。"},
+ {id:"rd25",cat:"pic",intent:"pic",kind:"single",pic:"🐘",ask:"看圖，選出正確的注音。",opts:["ㄒㄧㄤˋ","ㄒㄧㄤˊ","ㄒㄧㄤˇ"],ans:[0],why:"象的注音是ㄒㄧㄤˋ。"},
+ // ── 詞語與句子理解（5）
+ {id:"rd26",cat:"word",intent:"fillWord",kind:"single",stem:"（　）在天上飛。",ask:"選出適合放進括號的詞語。",opts:["鳥","魚","牛"],ans:[0],why:"鳥會在天上飛。"},
+ {id:"rd27",cat:"word",intent:"fillWord",kind:"single",stem:"（　）在水裡游。",ask:"選出適合放進括號的詞語。",opts:["魚","鳥","牛"],ans:[0],why:"魚會在水裡游。"},
+ {id:"rd28",cat:"word",intent:"fillWord",kind:"single",stem:"我用（　）看書。",ask:"選出適合放進括號的詞語。",opts:["眼睛","耳朵","{嘴|ㄗㄨㄟˇ}{巴|ㄅㄚ˙}"],ans:[0],why:"我們用眼睛看書。"},
+ {id:"rd29",cat:"word",intent:"badSentence",kind:"single",ask:"下面哪一句話不通順？",opts:["魚在水裡游。","鳥在天上飛。","牛在天上飛。"],ans:[2],why:"牛不會在天上飛，所以這句話不通順。"},
+ {id:"rd30",cat:"word",intent:"animal",kind:"single",ask:"下面哪一個是動物？",opts:["貓","書","杯"],ans:[0],why:"貓是動物。"},
+];
+const RD_CATS = {read:"仔細讀題理解", pinyin:"拼音與聲調", pic:"看圖選注音", word:"詞語與句子理解"};
+const RD_MODES = {careful:"細心讀題", solo:"獨立讀題", exam:"學校模擬考"};
+const RD_DAILY_REWARD_CAP = 10;   // 每天最多 10 題可得 ⭐（同一題同一天只算一次）
+
+function rdIntentOptions(q){
+  const it = RD_INTENTS[q.intent];
+  const wrong = shuffle(it.near).slice(0,2);
+  return shuffle([q.intent, ...wrong]);
+}
+function rdStat(){ return STATE.reading; }
+function rdEnsureDay(){
+  const t = todayStr(), r = rdStat();
+  if(!r.reward || r.reward.day !== t) r.reward = {day:t, ids:[]};
+}
+function rdRecord(res, q){
+  const r = rdStat();
+  r.total += 1;
+  if(res.intentChecked){ if(res.intentFirstTry) r.intent.ok += 1; else r.intent.wrong += 1; }
+  if(res.ansOk) r.answer.ok += 1; else r.answer.wrong += 1;
+  const bi = r.byIntent[q.intent] = r.byIntent[q.intent] || {intentWrong:0, ansOk:0, ansWrong:0};
+  if(res.intentChecked && !res.intentFirstTry) bi.intentWrong += 1;
+  if(res.ansOk) bi.ansOk += 1; else bi.ansWrong += 1;
+  const bc = r.byCat[q.cat] = r.byCat[q.cat] || {ok:0, wrong:0};
+  if(res.ansOk) bc.ok += 1; else bc.wrong += 1;
+  const bq = r.byQ[q.id] = r.byQ[q.id] || {seen:0, hints:0};
+  bq.seen += 1; if(res.hint) bq.hints += 1;
+  r.wrongIds = r.wrongIds.filter(x=>x !== q.id);
+  if(!res.ansOk) r.wrongIds.push(q.id);
+}
+// 同一題同一天只給一次、每天有上限；答錯不扣任何東西
+function rdReward(qid){
+  rdEnsureDay();
+  const rw = rdStat().reward;
+  if(rw.ids.includes(qid) || rw.ids.length >= RD_DAILY_REWARD_CAP) return 0;
+  rw.ids.push(qid); return 1;
+}
+function rdJudge(q, picked){
+  const a = [...q.ans].sort().join(), b = [...picked].sort().join();
+  return a === b;
+}
+
+let RD = null;
+function rdStart(mode, ids){
+  const pool = ids ? READING_BANK.filter(q=>ids.includes(q.id)) : READING_BANK;
+  const qs = sample(pool, Math.min(10, pool.length));
+  RD = {mode, qs, i:0, results:[], step:null, sel:new Set(), earned:0, tmp:null};
+  rdPrepQuestion();
+  go('reading-play');
+}
+function rdPrepQuestion(){
+  const q = RD.qs[RD.i];
+  RD.sel = new Set(); RD.order = shuffle(q.opts.map((_,i)=>i));
+  RD.tmp = {intentTries:0, intentFirstTry:true, hint:false, picked:[], wrongIntents:[]};
+  RD.iopts = rdIntentOptions(q);
+  RD.step = RD.mode === "careful" ? "intent" : "answer";
+  if(RD.mode === "solo" && Math.random() < 0.3) RD.step = "intent";   // 獨立讀題：隨機穿插讀題理解
+  RD.tmp.askIntent = RD.step === "intent";
+}
+function rdStemHTML(q){
+  let h = "";
+  if(q.pic) h += `<div class="rd-pic">${q.pic}</div>`;
+  if(q.stem) h += `<div class="rd-stem">${PURE_ZY.test(q.stem) ? `<span class="zy big">${zhDisp(q.stem)}</span>` : rb(q.stem).replace(/<span class="zy">/g,'<span class="zy big">')}</div>`;
+  return h;
+}
+function renderReadingMenu(){
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div'); s.className = "screen";
+  const r = rdStat();
+  s.innerHTML = `
+    <div class="header-row"><div class="back-btn" id="backBtn">←</div><h2 class="rbtxt">${rb("讀題魔法學院")}</h2></div>
+    <div class="rd-hero rbtxt">${rb("先看清楚題目，再作答！")}</div>
+    <div class="rd-card" data-mode="careful"><div class="rd-card-ico">🔍</div><div><div class="rd-card-t rbtxt">${rb("細心讀題")}</div><div class="rd-card-d rbtxt">${rb("先想一想題目要做什麼，再作答。")}</div></div></div>
+    <div class="rd-card" data-mode="solo"><div class="rd-card-ico">📖</div><div><div class="rd-card-t rbtxt">${rb("獨立讀題")}</div><div class="rd-card-d rbtxt">${rb("自己讀題，直接作答。")}</div></div></div>
+    <div class="rd-card" data-mode="exam"><div class="rd-card-ico">📝</div><div><div class="rd-card-t rbtxt">${rb("學校模擬考")}</div><div class="rd-card-d rbtxt">${rb("十題，交卷以後才看成績。")}</div></div></div>
+    ${r.wrongIds.length ? `<div class="rd-card" data-mode="wrong" style="background:var(--lavender);"><div class="rd-card-ico">🔁</div><div><div class="rd-card-t rbtxt">${rb("錯題練習")}</div><div class="rd-card-d rbtxt">${rb("再練習一次做錯的題目。")}（${r.wrongIds.length}）</div></div></div>` : ``}
+  `;
+  app.appendChild(s); attachGear(app);
+  s.querySelector('#backBtn').addEventListener('click', ()=> go('home'));
+  s.querySelectorAll('[data-mode]').forEach(el=> el.addEventListener('click', ()=>{
+    const m = el.getAttribute('data-mode');
+    if(m === "wrong") rdStart("careful", rdStat().wrongIds.slice()); else rdStart(m);
+  }));
+}
+function renderReadingPlay(){
+  if(!RD){ go('reading'); return; }
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div'); s.className = "screen";
+  const q = RD.qs[RD.i];
+  s.innerHTML = `
+    <div class="header-row"><div class="back-btn" id="backBtn">←</div><h2 class="rbtxt">${rb(RD_MODES[RD.mode])}</h2></div>
+    <div class="qcounter rbtxt">${rb("第")} ${RD.i+1} / ${RD.qs.length} ${rb("題")}</div>
+    <div class="progress-dots">${RD.qs.map((_,i)=>`<div class="dot ${i<RD.i?'filled':''}"></div>`).join("")}</div>
+    <div class="qcard rd-q">${rdStemHTML(q)}<div class="rd-ask rbtxt">${rb(q.ask)}</div></div>
+    <div id="rdBody"></div>`;
+  app.appendChild(s); attachGear(app);
+  s.querySelector('#backBtn').addEventListener('click', ()=>{
+    confirmDialog("要離開嗎？這一回的練習不會記錄。", ()=>{ RD = null; go('reading'); });
+  });
+  const body = s.querySelector('#rdBody');
+  if(RD.step === "intent") rdIntentUI(body, q);
+  else if(RD.step === "answer") rdAnswerUI(body, q);
+  else rdFeedbackUI(body, q);
+}
+function rdIntentUI(body, q){
+  body.innerHTML = `<div class="rd-label rbtxt">${rb("這一題要我們做什麼？")}</div><div class="rd-opts one" id="iopts"></div><div class="rd-msg rbtxt" id="imsg"></div>`;
+  const wrap = body.querySelector('#iopts');
+  RD.iopts.forEach(id=>{
+    const b = document.createElement('button'); b.className = "rd-opt"; b.innerHTML = `<span class="rbtxt">${rb(RD_INTENTS[id].text)}</span>`;
+    if(RD.tmp.wrongIntents.includes(id)){ b.classList.add('wrong'); b.disabled = true; }
+    b.addEventListener('click', ()=>{
+      RD.tmp.intentTries += 1;
+      if(id === q.intent){ RD.step = "answer"; render(); }
+      else {
+        RD.tmp.intentFirstTry = false; RD.tmp.wrongIntents.push(id);
+        b.classList.add('wrong'); b.disabled = true;
+        body.querySelector('#imsg').innerHTML = rb("再讀一次題目，看看要做什麼喔！");
+      }
+    });
+    wrap.appendChild(b);
+  });
+}
+function rdAnswerUI(body, q){
+  const exam = RD.mode === "exam", careful = RD.mode === "careful";
+  const syl = q.opts.every(o=>PURE_ZY.test(o));
+  body.innerHTML = `<div class="rd-opts ${syl?'two':'one'}" id="aopts"></div>
+    ${RD.tmp.hint ? `<div class="rd-hint rbtxt">💡 ${rb(RD_INTENTS[q.intent].text)}</div>` : ``}
+    <div class="rd-actions">${careful && !RD.tmp.hint ? `<button class="rd-btn ghost" id="hintBtn"><span class="rbtxt">💡 ${rb("提示")}</span></button>` : ``}<button class="rd-btn main" id="okBtn" ${RD.sel.size?'':'disabled'}><span class="rbtxt">${rb(exam && RD.i === RD.qs.length-1 ? "交卷" : "確定")}</span></button></div>`;
+  const wrap = body.querySelector('#aopts');
+  RD.order.forEach(idx=>{
+    const b = document.createElement('button'); b.className = "rd-opt" + (RD.sel.has(idx) ? " sel" : ""); b.innerHTML = optHTML(q.opts[idx]);
+    b.addEventListener('click', ()=>{
+      if(q.kind === "single") RD.sel = new Set([idx]);
+      else { if(RD.sel.has(idx)) RD.sel.delete(idx); else RD.sel.add(idx); }
+      render();
+    });
+    wrap.appendChild(b);
+  });
+  const hb = body.querySelector('#hintBtn'); if(hb) hb.addEventListener('click', ()=>{ RD.tmp.hint = true; render(); });
+  body.querySelector('#okBtn').addEventListener('click', ()=>{
+    const picked = [...RD.sel]; const ok = rdJudge(q, picked);
+    const res = {id:q.id, ansOk:ok, picked, hint:RD.tmp.hint, intentChecked:RD.tmp.askIntent, intentFirstTry:RD.tmp.intentFirstTry};
+    RD.results.push(res);
+    if(exam){ rdNext(); return; }
+    rdRecord(res, q);
+    if(ok){ const g = rdReward(q.id); if(g){ RD.earned += g; addStars(g); } }
+    saveState();
+    RD.step = "fb"; RD.last = res; render();
+  });
+}
+function rdFeedbackUI(body, q){
+  const res = RD.last;
+  body.innerHTML = `<div class="rd-opts ${q.opts.every(o=>PURE_ZY.test(o))?'two':'one'}" id="fopts"></div>
+    <div class="rd-fb ${res.ansOk?'good':'bad'}"><div class="rd-fb-t rbtxt">${res.ansOk ? rb("答對了！太棒了！") : rb("再想想，答案在這裡。")}</div><div class="rd-fb-w rbtxt">${rb(q.why)}</div>
+    ${RD.mode === "solo" ? `<div class="rd-fb-w rbtxt" style="margin-top:6px;">${rb("題目要求：")}${rb(RD_INTENTS[q.intent].text)}</div>` : ``}</div>
+    <div class="rd-actions"><button class="rd-btn main" id="nextBtn"><span class="rbtxt">${rb(RD.i === RD.qs.length-1 ? "完成" : "下一題")}</span></button></div>`;
+  const wrap = body.querySelector('#fopts');
+  RD.order.forEach(idx=>{
+    const b = document.createElement('div'); b.className = "rd-opt static";
+    const isAns = q.ans.includes(idx), isPick = res.picked.includes(idx);
+    if(isAns) b.classList.add('correct'); else if(isPick) b.classList.add('wrong');
+    b.innerHTML = optHTML(q.opts[idx]) + (isAns ? `<span class="rd-mark">✓</span>` : isPick ? `<span class="rd-mark">✗</span>` : ``);
+    wrap.appendChild(b);
+  });
+  body.querySelector('#nextBtn').addEventListener('click', rdNext);
+}
+function rdNext(){
+  if(RD.i < RD.qs.length - 1){ RD.i += 1; rdPrepQuestion(); render(); return; }
+  rdFinish();
+}
+function rdFinish(){
+  const r = rdStat();
+  if(RD.mode === "exam"){
+    RD.results.forEach((res,i)=>{ const q = RD.qs[i]; rdRecord(res, q); if(res.ansOk){ const g = rdReward(q.id); if(g){ RD.earned += g; addStars(g); } } });
+    const score = RD.results.filter(x=>x.ansOk).length;
+    r.rounds.exam += 1; r.exams.push({ts:Date.now(), score, total:RD.qs.length}); if(r.exams.length > 30) r.exams.shift();
+  } else r.rounds[RD.mode] += 1;
+  saveState();
+  go('reading-result');
+}
+function renderReadingResult(){
+  if(!RD){ go('reading'); return; }
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div'); s.className = "screen";
+  const total = RD.qs.length, ok = RD.results.filter(x=>x.ansOk).length, exam = RD.mode === "exam";
+  const wrongQs = RD.qs.filter((q,i)=>!RD.results[i].ansOk);
+  const intentRes = RD.results.filter(x=>x.intentChecked);
+  s.innerHTML = `
+    <div class="result-card">
+      <div class="big-emoji">${ok === total ? "🏆" : "🎉"}</div>
+      <div class="rbtxt">${rb(exam ? "考完了！" : "完成了！")}</div>
+      <div class="score">${ok} / ${total}</div>
+      ${intentRes.length ? `<div class="rbtxt" style="font-size:14px; color:var(--ink-soft); font-weight:700;">${rb("讀題")} ${intentRes.filter(x=>x.intentFirstTry).length} / ${intentRes.length} ${rb("一次就對")}</div>` : ``}
+      ${RD.earned ? `<div class="stars-earned">${"⭐".repeat(Math.min(10,RD.earned))}</div>` : ``}
+    </div>
+    ${exam && wrongQs.length ? `<div class="cat-label rbtxt">${rb("錯題")}</div>${wrongQs.map(q=>`<div class="stat-card rd-wrong"><div class="rbtxt">${rb(q.ask)}</div>${q.stem?`<div style="margin-top:4px;">${PURE_ZY.test(q.stem)?`<span class="zy">${zhDisp(q.stem)}</span>`:`<span class="rbtxt">${rb(q.stem)}</span>`}</div>`:``}<div style="margin-top:6px; font-weight:800;" class="rbtxt">${rb("答案：")}${q.ans.map(i=>optHTML(q.opts[i])).join("　")}</div><div class="rbtxt" style="margin-top:4px; color:var(--ink-soft);">${rb(q.why)}</div></div>`).join("")}` : ``}
+    ${wrongQs.length ? `<button class="rd-btn main" id="rtBtn" style="width:100%; margin-top:10px;"><span class="rbtxt">${rb("重新練習錯題")}</span></button>` : ``}
+    <button class="rd-btn ghost" id="againBtn" style="width:100%; margin-top:10px;"><span class="rbtxt">${rb("再玩一次")}</span></button>
+    <button class="rd-btn ghost" id="menuBtn" style="width:100%; margin-top:10px;"><span class="rbtxt">${rb("回學院")}</span></button>`;
+  app.appendChild(s); attachGear(app);
+  const rt = s.querySelector('#rtBtn'); if(rt) rt.addEventListener('click', ()=> rdStart("careful", wrongQs.map(q=>q.id)));
+  s.querySelector('#againBtn').addEventListener('click', ()=> rdStart(RD.mode));
+  s.querySelector('#menuBtn').addEventListener('click', ()=>{ RD = null; go('reading'); });
+}
+function renderReadingStats(){
+  app.appendChild(topStatsBar());
+  const s = document.createElement('div'); s.className = "screen";
+  const r = rdStat(), pct = (a,b)=> (a+b) ? Math.round(a/(a+b)*100)+"%" : "—";
+  const worst = Object.entries(r.byIntent).map(([id,v])=>({id, bad:v.intentWrong+v.ansWrong, v})).filter(x=>x.bad>0 && RD_INTENTS[x.id]).sort((a,b)=>b.bad-a.bad).slice(0,5);
+  s.innerHTML = `
+    <div class="header-row"><div class="back-btn" id="backBtn">←</div><h2>讀題學習統計</h2></div>
+    <div class="stat-card">
+      <div class="row"><span>已完成練習題數</span><b>${r.total}</b></div>
+      <div class="row"><span>讀題理解正確率（一次就對）</span><b>${pct(r.intent.ok, r.intent.wrong)}</b></div>
+      <div class="row"><span>注音作答正確率</span><b>${pct(r.answer.ok, r.answer.wrong)}</b></div>
+      <div class="row"><span>目前錯題數量</span><b>${r.wrongIds.length}</b></div>
+      <div class="row"><span>練習回數（細心／獨立／模擬考）</span><b>${r.rounds.careful}／${r.rounds.solo}／${r.rounds.exam}</b></div>
+    </div>
+    <div class="cat-label">常看錯的作答指令</div>
+    <div class="stat-card">${worst.length ? worst.map(x=>`<div class="row"><span>${RD_INTENTS[x.id].text}</span><b>讀題錯 ${x.v.intentWrong}・作答錯 ${x.v.ansWrong}</b></div>`).join("") : `<div style="color:var(--ink-soft);">目前沒有資料</div>`}</div>
+    <div class="cat-label">各題型表現（作答）</div>
+    <div class="stat-card">${Object.keys(RD_CATS).map(c=>{ const v = r.byCat[c] || {ok:0,wrong:0}; return `<div class="row"><span>${RD_CATS[c]}</span><b>${v.ok+v.wrong ? pct(v.ok,v.wrong)+"（"+v.ok+"/"+(v.ok+v.wrong)+"）" : "—"}</b></div>`; }).join("")}</div>
+    <div class="cat-label">模擬考成績（最近 5 次）</div>
+    <div class="stat-card">${r.exams.length ? r.exams.slice(-5).reverse().map(e=>`<div class="row"><span>${fmtTime(e.ts)}</span><b>${e.score} / ${e.total}</b></div>`).join("") : `<div style="color:var(--ink-soft);">還沒有考過</div>`}</div>
+    <div class="stat-card" style="font-size:12px; color:var(--ink-soft); line-height:1.7;">讀題理解錯誤（沒看懂題目要做什麼）和注音作答錯誤（注音知識不熟）分開統計。題庫範圍：${RD_LESSON}。</div>`;
+  app.appendChild(s); attachGear(app);
+  s.querySelector('#backBtn').addEventListener('click', ()=> go('parent'));
+}
+
+
 /* ---------------- HOME ---------------- */
 function renderHome(){
   const bar = topStatsBar();
@@ -1465,6 +1853,7 @@ function renderHome(){
       <div class="tile wide c-lav" data-go="princess" style="background:linear-gradient(135deg, var(--lavender), var(--pink));">
         <div class="emoji">👑</div><div class="label">我的公主</div>
       </div>
+      <div class="tile wide c-butter" data-go="reading" style="background:linear-gradient(135deg,var(--butter),var(--mint));"><div class="emoji">📚</div><div class="label">讀題魔法學院</div></div>
       <div class="tile c-pink" data-go="table"><div class="emoji">📖</div><div class="label">注音總表</div></div>
       <div class="tile c-butter" data-go="stroke-table"><div class="emoji">✍️</div><div class="label">看筆順</div></div>
       <div class="tile c-lav" data-go="listen"><div class="emoji">🔊</div><div class="label">聽音找注音</div></div>
@@ -3054,6 +3443,7 @@ function renderParent(){
     <div class="setting-row"><div class="label">音效</div><div class="switch ${STATE.settings.sfx?'on':''}" id="sfxToggle"><div class="knob"></div></div></div>
     <div class="action-btn secondary" id="testTtsBtn">🔊 測試詞語語音</div>
     <div class="action-btn secondary" id="statsBtn">查看學習統計</div>
+    <div class="action-btn secondary" id="readingStatsBtn">📚 讀題學習統計</div>
     <div class="cat-label">資料備份</div>
     <div class="stat-card" style="font-size:12px; color:var(--ink-soft); line-height:1.7; text-align:left;">
       資料只存在這支手機的瀏覽器裡。換手機、清除瀏覽器資料之前，請先匯出備份。<br>
@@ -3080,6 +3470,7 @@ function renderParent(){
     STATE.settings.sfx = !STATE.settings.sfx; saveState(); render();
   });
   s.querySelector('#statsBtn').addEventListener('click', ()=> go('stats'));
+  s.querySelector('#readingStatsBtn').addEventListener('click', ()=> go('reading-stats'));
   s.querySelector('#testTtsBtn').addEventListener('click', ()=>{
     if(!('speechSynthesis' in window)){
       toast("這台裝置的瀏覽器不支援語音合成");

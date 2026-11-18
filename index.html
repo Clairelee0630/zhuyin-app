@@ -191,6 +191,30 @@
   .rd-q{padding:16px 14px; text-align:center;}
   .rd-pic{font-size:64px; line-height:1.2;}
   .rd-stem{font-size:26px; font-weight:800; margin:4px 0 8px;}
+  .g-info{text-align:center;font-weight:800;color:var(--ink);margin:8px 0;font-size:15px;}
+  .g-water{background:#FFF3C4;border-radius:14px;padding:8px 12px;text-align:center;font-weight:700;font-size:13px;color:#8A6F68;margin-bottom:10px;}
+  .g-water.ok{background:#D9F3E4;color:#2F7A55;}
+  .g-scene{position:relative;height:150px;border-radius:20px;overflow:hidden;margin-bottom:10px;border:3px solid #fff;background:linear-gradient(180deg,#CFEBFF 0%,#EAF7FF 55%,#BFE8C4 55%,#A6DDAE 100%);}
+  .g-dec{position:absolute;transform:translate(-50%,0);line-height:1;pointer-events:none;} .g-ground{position:absolute;left:0;right:0;bottom:2px;height:26px;z-index:4;} .g-sf{position:absolute;bottom:0;font-size:20px;}
+  .gFlutter{animation:gFlut 2.6s ease-in-out infinite;} .gFloat{animation:gFlt 3.4s ease-in-out infinite;}
+  @keyframes gFlut{0%,100%{transform:translate(-50%,0) rotate(-6deg)}50%{transform:translate(-30%,-12px) rotate(8deg)}}
+  @keyframes gFlt{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-8px)}}
+  .g-decgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px;} .g-decitem{background:#fff;border:2px solid #fff;border-radius:16px;padding:8px 2px;text-align:center;cursor:pointer;} .g-decitem.on{border-color:#7ED3A0;background:#F0FBF4;} .g-dn{font-size:11px;font-weight:800;color:var(--ink);} .g-dp{font-size:11px;font-weight:800;color:var(--pink-deep);}
+  .g-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .g-plot{background:#E8D2B8;border:3px solid #C9A67F;border-radius:18px;padding:10px 4px;text-align:center;min-height:104px;cursor:pointer;}
+  .g-plot .g-ico{font-size:38px;line-height:1.2;} .g-plot .g-lab{font-size:11px;font-weight:800;color:#5B4A45;margin-top:2px;} .g-dots{font-size:10px;margin-top:2px;}
+  .g-plot.locked{background:#E9E4E2;border-color:#CFC7C4;opacity:.8;} .g-plot.bloom{background:#FFE3EE;border-color:#FF9EC4;animation:gpulse 1.4s infinite;} .g-plot.magic{border-color:#B79CF0;}
+  @keyframes gpulse{50%{transform:scale(1.04);}}
+  .g-actions{display:flex;gap:10px;margin:14px 0;} .g-actions .rd-btn{flex:1;}
+  .g-sec{font-weight:800;font-size:16px;color:var(--pink-deep);margin:10px 0 6px;}
+  .g-mile{display:flex;align-items:center;gap:10px;background:#fff;border-radius:18px;padding:10px 12px;margin-bottom:8px;}
+  .g-mile.done{background:#EAF8EF;} .g-mi{font-size:32px;} .g-mt{flex:1;font-size:13px;line-height:1.5;color:var(--ink);} .g-mt span{color:var(--ink-soft);font-weight:700;font-size:12px;} .g-rw{color:var(--pink-deep)!important;} .g-note{color:#B07A00!important;}
+  .g-mb{min-width:54px;text-align:center;font-weight:800;font-size:13px;color:var(--ink-soft);} .g-mb .rd-btn{padding:8px 10px;font-size:13px;}
+  .g-bar{height:6px;background:#F0E4DF;border-radius:4px;margin-top:4px;overflow:hidden;} .g-bar i{display:block;height:100%;background:var(--pink-deep);}
+  .a-tabs{display:flex;gap:6px;margin:8px 0 12px;} .a-tab{flex:1;border:0;border-radius:14px;padding:10px 4px;font-weight:800;background:#fff;color:var(--ink-soft);font-size:14px;} .a-tab.on{background:var(--pink-deep);color:#fff;}
+  .a-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;} .a-card{background:#fff;border-radius:18px;padding:10px 4px;text-align:center;border:2px solid #fff;}
+  .a-card.t-rare{border-color:#B79CF0;} .a-card.t-special{border-color:#FFD66B;background:#FFF9E2;} .a-card.unk{opacity:.55;}
+  .a-ico{font-size:40px;} .a-name{font-size:12px;font-weight:800;margin-top:2px;} .a-sub{font-size:11px;color:var(--ink-soft);font-weight:700;}
   .rd-guide{background:#FFF3C4;border:2px solid #FFD66B;border-radius:20px;padding:16px;margin:10px 0;text-align:center;}
   .rd-guide-t.rbtxt{font-size:18px;font-weight:800;color:#B07A00;}
   .rd-guide-b.rbtxt{font-size:22px;font-weight:800;margin-top:6px;}
@@ -300,6 +324,14 @@
   .burst{position:relative; height:0;}
   .burst span{position:absolute; left:50%; top:56px; font-size:20px; opacity:0; animation:burstOut .95s ease-out forwards;}
   @keyframes burstOut{0%{opacity:0; transform:translate(-50%,-50%) scale(.3);} 30%{opacity:1;} 100%{opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.25);}}
+  @keyframes bunnyWiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(4deg)}}
+  @keyframes bunnySquish{0%{transform:scale(1,1)}30%{transform:scale(1.15,.82)}60%{transform:scale(.92,1.1) translateY(-8px)}100%{transform:scale(1,1)}}
+  @keyframes bunnySpin{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-34px) rotate(180deg)}100%{transform:translateY(0) rotate(360deg)}}
+  @keyframes bunnyBounce3{0%,100%{transform:translateY(0)}15%{transform:translateY(-22px)}30%{transform:translateY(0)}45%{transform:translateY(-16px)}60%{transform:translateY(0)}75%{transform:translateY(-9px)}}
+  @keyframes bunnyNuzzle{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-10px) rotate(-6deg)}75%{transform:translateX(10px) rotate(6deg)}}
+  @keyframes bHeart{0%{opacity:0;transform:translate(0,0) scale(.5)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-90px) scale(1.2)}}
+  .b-heart{position:absolute;font-size:22px;pointer-events:none;animation:bHeart 1.1s ease-out forwards;}
+  #bunnyBox{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;}
   @keyframes bunnyHop{0%{transform:translateY(0)} 35%{transform:translateY(-14px)} 70%{transform:translateY(0)} 85%{transform:translateY(-5px)} 100%{transform:translateY(0)}}
   @keyframes popIn{0%{transform:scale(.4);} 70%{transform:scale(1.15);} 100%{transform:scale(1);}}
   .pop-icon{animation:popIn .5s ease-out;}
@@ -736,16 +768,18 @@ function defaultState(){
     claimedRewards:[],   // 已實際領取的升級禮物 id
     pendingRewards:[],   // 已達成、可領取但尚未領取的升級禮物 id
     ownedAccessories:["acc_pink_bow"], // 已擁有的飾品（粉紅蝴蝶結為初始擁有）
-    equippedHeadAccessory:null, equippedHandAccessory:null, // 頭部欄位（髮飾/皇冠共用）、手持欄位（魔法棒）
+    equippedHeadAccessory:null, equippedHandAccessory:null, equippedBackAccessory:null, // 頭部欄位（髮飾/皇冠共用）、手持欄位（魔法棒）
     // --- v4 新增欄位：房間與小兔兔 ---
     ownedRooms:["room_pink"], equippedRoom:"room_pink",
     bunny:{ affection:0, fedDate:"", petDate:"", petCount:0 },
     // --- v5 新增欄位：每日公主任務 ---
     quests:{ date:"", ids:[], claimed:[], bonus:false, rounds:{} },
     // --- v6：資料保護 ---
-    schemaVersion:7, lastBackupAt:0,
+    schemaVersion:8, lastBackupAt:0,
     // --- v7：讀題魔法學院（與原本注音練習的統計分開記錄）---
-    reading:{ total:0, intent:{ok:0,wrong:0}, answer:{ok:0,wrong:0}, byIntent:{}, byCat:{}, byQ:{}, wrongIds:[], rounds:{careful:0,solo:0,exam:0}, exams:[], reward:{day:"",ids:[]} }
+    reading:{ total:0, intent:{ok:0,wrong:0}, answer:{ok:0,wrong:0}, byIntent:{}, byCat:{}, byQ:{}, wrongIds:[], rounds:{careful:0,solo:0,exam:0}, exams:[], reward:{day:"",ids:[]} },
+    // --- v8：秘密花園與魔法圖鑑 ---
+    garden:{ opened:false, seeds:{normal:0,magic:0}, plots:[null,null,null,null,null,null], openPlots:3, flowers:{}, items:[], harvested:0, claimed:[], learnDay:"", decor:{owned:[], placed:[]} }
   };
 }
 let STATE = loadState();
@@ -776,7 +810,16 @@ function mergeState(parsed){
   merged.reading.rounds = Object.assign({careful:0,solo:0,exam:0}, pr.rounds||{});
   merged.reading.reward = Object.assign({day:"",ids:[]}, pr.reward||{});
   merged.reading.wrongIds = Array.isArray(pr.wrongIds) ? pr.wrongIds : []; merged.reading.exams = Array.isArray(pr.exams) ? pr.exams : [];
-  merged.schemaVersion = 7;
+  const g0 = {opened:false, seeds:{normal:0,magic:0}, plots:[null,null,null,null,null,null], openPlots:3, flowers:{}, items:[], harvested:0, claimed:[], learnDay:"", decor:{owned:[], placed:[]}};
+  const pg = parsed.garden || {};
+  merged.garden = Object.assign(g0, pg);
+  merged.garden.seeds = Object.assign({normal:0,magic:0}, pg.seeds||{});
+  merged.garden.flowers = Object.assign({}, pg.flowers||{});
+  merged.garden.items = Array.isArray(pg.items) ? pg.items : [];
+  merged.garden.claimed = Array.isArray(pg.claimed) ? pg.claimed : [];
+  const pd = pg.decor || {}; merged.garden.decor = {owned:Array.isArray(pd.owned)?pd.owned:[], placed:Array.isArray(pd.placed)?pd.placed:[]};
+  merged.garden.plots = Array.isArray(pg.plots) && pg.plots.length===6 ? pg.plots : g0.plots;
+  merged.schemaVersion = 8;
   return merged;
 }
 function loadState(){
@@ -808,7 +851,7 @@ function backupSummary(d){
 function fmtTime(ts){ const d = new Date(ts); const p = n=>String(n).padStart(2,"0"); return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; }
 function exportBackup(){
   const d = new Date(), p = n=>String(n).padStart(2,"0");
-  const payload = {app:"zhuyin-app", schemaVersion:7, exportedAt:d.toISOString(), data:STATE};
+  const payload = {app:"zhuyin-app", schemaVersion:8, exportedAt:d.toISOString(), data:STATE};
   const blob = new Blob([JSON.stringify(payload)], {type:"application/json"});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -824,7 +867,7 @@ function validateBackup(obj){
   const d = obj.data;
   if(!d || typeof d !== "object" || Array.isArray(d)) return {ok:false, msg:"備份檔裡沒有存檔資料"};
   if(!Number.isFinite(d.stars) || !Number.isFinite(d.gems) || d.stars < 0 || d.gems < 0) return {ok:false, msg:"備份檔的星星或鑽石資料不正確"};
-  if((obj.schemaVersion||0) > 7) return {ok:false, msg:"這份備份來自比較新的版本，請先更新 App"};
+  if((obj.schemaVersion||0) > 8) return {ok:false, msg:"這份備份來自比較新的版本，請先更新 App"};
   return {ok:true, data:d};
 }
 function applyState(data){
@@ -903,7 +946,7 @@ function recordCorrectFor(key){
   }
 }
 function addStars(n){
-  STATE.stars += n;
+  STATE.stars += n; if(STATE.garden) STATE.garden.learnDay = todayStr();
   addGems(n, false);
   checkAchievements();
   checkPrincessLevel();
@@ -1020,6 +1063,11 @@ const ACCESSORIES = [
   {id:"acc_heart_wand",   name:"愛心魔法棒", category:"wand",  slot:"hand", image:"assets/accessories/acc_heart_wand.svg",   unlockType:"diamond", requiredLevel:0, price:100, w:0.17},
   {id:"acc_star_wand",    name:"星星魔法棒", category:"wand",  slot:"hand", image:"assets/accessories/acc_star_wand.svg",    unlockType:"diamond", requiredLevel:0, price:150, w:0.17},
   {id:"acc_sa_bow",     name:"注音蝴蝶結", category:"hair",  slot:"head", image:"assets/accessories/acc_sa_bow.svg",     unlockType:"achievement", saId:"sa_bow",   requiredLevel:0, price:0, w:0.36, ox:-0.36, oy:0.02, rot:-12},
+  {id:"acc_read_crown", name:"讀題魔法皇冠", category:"crown", slot:"head", image:"assets/accessories/acc_read_crown.svg", unlockType:"achievement", saId:"sa_read_crown", requiredLevel:0, price:0, w:0.74, ox:0, oy:-0.075, rot:0},
+  {id:"acc_wing_angel",    name:"天使翅膀",     category:"wing", slot:"back", image:"assets/accessories/acc_wing_angel.svg",     unlockType:"diamond", requiredLevel:0, price:120, w:1.5},
+  {id:"acc_wing_butterfly", name:"蝴蝶翅膀",     category:"wing", slot:"back", image:"assets/accessories/acc_wing_butterfly.svg", unlockType:"diamond", requiredLevel:0, price:150, w:1.5},
+  {id:"acc_wing_star",      name:"花園小仙子翅膀", category:"wing", slot:"back", image:"assets/accessories/acc_wing_star.svg",      unlockType:"achievement", saId:"sa_wing_star", requiredLevel:0, price:0, w:1.5},
+  {id:"acc_wing_rainbow",   name:"彩虹仙子翅膀", category:"wing", slot:"back", image:"assets/accessories/acc_wing_rainbow.svg",   unlockType:"achievement", saId:"sa_wing_rainbow", requiredLevel:0, price:0, w:1.6},
   {id:"acc_sa_crown",   name:"注音皇冠",   category:"crown", slot:"head", image:"assets/accessories/acc_sa_crown.svg",   unlockType:"achievement", saId:"sa_crown", requiredLevel:0, price:0, w:0.74, ox:0, oy:-0.075, rot:0},
   {id:"acc_sa_wand",    name:"音符魔法棒", category:"wand",  slot:"hand", image:"assets/accessories/acc_sa_wand.svg",    unlockType:"achievement", saId:"sa_wand",  requiredLevel:0, price:0, w:0.17},
   {id:"acc_zhuyin_wand",  name:"注音魔法棒", category:"wand",  slot:"hand", image:"assets/accessories/acc_zhuyin_wand.svg",  unlockType:"level",   requiredLevel:5, price:0,   rewardId:"r_wand", w:0.17},
@@ -1028,6 +1076,7 @@ const ACC_CATEGORIES = [
   {key:"hair",  icon:"🎀", label:"髮飾"},
   {key:"crown", icon:"👑", label:"皇冠"},
   {key:"wand",  icon:"🪄", label:"魔法棒"},
+  {key:"wing",  icon:"🧚", label:"翅膀"},
 ];
 // ===== 城堡：領取「夢幻城堡」(Lv.6) 後開放，用 💎 逐級升級（Lv.1–6）=====
 const CASTLE_MAX = 6, CASTLE_COSTS = {1:40, 2:60, 3:80, 4:100, 5:150}; // 由該級升到下一級
@@ -1108,17 +1157,26 @@ const QUEST_POOL = [
   {id:"q_correct",icon:"⭐", text:"今天答對 15 題",       need:15, kind:"correct"},
   {id:"q_feed",   icon:"🥕", text:"餵小兔兔紅蘿蔔",       need:1,  kind:"feed"},
   {id:"q_pet",    icon:"🤗", text:"摸摸小兔兔 2 次",      need:2,  kind:"pet"},
+  {id:"q_read",   icon:"📚", text:"讀題魔法學院做 5 題",   need:5,  kind:"round", mode:"rdq"},
+  {id:"q_rdround",icon:"🔍", text:"完成一回讀題魔法學院", need:1,  kind:"round", mode:"rdround"},
+  {id:"q_water",  icon:"💧", text:"幫秘密花園澆水",       need:1,  kind:"round", mode:"water", needs:"garden"},
 ];
+function questAvailable(q){ return q.needs !== "garden" || (STATE.garden && gUnlocked()); }
 const QUEST_GEMS = 5, QUEST_BONUS_GEMS = 10;
 function questById(id){ return QUEST_POOL.find(q=>q.id===id); }
+const QUEST_VER = 2;
 function ensureQuests(){
   const t = todayStr(), Q = STATE.quests;
-  if(Q.date === t && Q.ids.length === 3) return;
+  if(Q.date === t && Q.ids.length === 3 && Q.v === QUEST_VER) return;
   let h = 0; for(const c of t) h = (h*31 + c.charCodeAt(0)) % 9973;
-  const rest = QUEST_POOL.filter(q=>q.id !== "q_daily").map(q=>q.id);
-  const first = rest.splice(h % rest.length, 1)[0];
-  const second = rest[(h*7 + 3) % rest.length];
-  STATE.quests = {date:t, ids:["q_daily", first, second], claimed:[], bonus:false, rounds:{}};
+  // 每天三個任務：①讀題魔法學院 ②花園澆水（花園未開放時改為小兔兔）③原本的注音遊戲
+  const pick = (arr, k)=> arr[(h*k + k) % arr.length];
+  const readQ = pick(["q_read","q_rdround"], 3);
+  const gardenQ = (STATE.garden && gUnlocked()) ? "q_water" : pick(["q_feed","q_pet"], 5);
+  const classic = pick(["q_daily","q_spell","q_tone","q_listen","q_correct"], 7);
+  const keepClaimed = (Q.date === t) ? Q.claimed : [];
+  const ids = [readQ, gardenQ, classic];
+  STATE.quests = {date:t, v:QUEST_VER, ids, claimed:keepClaimed.filter(x=>ids.includes(x)), bonus: Q.date === t ? !!Q.bonus : false, rounds: Q.date === t ? (Q.rounds||{}) : {}};
   saveState();
 }
 function questRound(mode){ ensureQuests(); STATE.quests.rounds[mode] = (STATE.quests.rounds[mode]||0) + 1; saveState(); }
@@ -1186,15 +1244,16 @@ function roomStageHTML(W, opts){
 function accById(id){ return ACCESSORIES.find(a=>a.id===id) || null; }
 // 規格要求的 claimed / equipped 欄位：由玩家狀態即時推導
 function accClaimed(a){ return STATE.ownedAccessories.includes(a.id); }
-function accEquipped(a){ return STATE.equippedHeadAccessory === a.id || STATE.equippedHandAccessory === a.id; }
+function accEquipped(a){ return STATE.equippedHeadAccessory === a.id || STATE.equippedHandAccessory === a.id || STATE.equippedBackAccessory === a.id; }
 function equipAccessory(id){
   const a = accById(id); if(!a || !accClaimed(a)) return false;
   if(a.slot === "hand") STATE.equippedHandAccessory = id;
+  else if(a.slot === "back") STATE.equippedBackAccessory = id;
   else STATE.equippedHeadAccessory = id; // 髮飾與皇冠共用，自動卸下原本的頭部飾品
   saveState(); return true;
 }
 function unequipAccessory(slot){
-  if(slot === "hand") STATE.equippedHandAccessory = null; else STATE.equippedHeadAccessory = null;
+  if(slot === "hand") STATE.equippedHandAccessory = null; else if(slot === "back") STATE.equippedBackAccessory = null; else STATE.equippedHeadAccessory = null;
   saveState();
 }
 function buyAccessory(id){
@@ -1227,7 +1286,11 @@ function princessStackHTML(outfit, H, opts){
   const W = Math.round(H * an.aspect);
   const head = opts.noAcc ? null : accById(STATE.equippedHeadAccessory);
   const hand = opts.noAcc ? null : accById(STATE.equippedHandAccessory);
-  let layers = "";
+  let layers = "", back = "";
+  const wing = opts.noAcc ? null : accById(STATE.equippedBackAccessory);
+  if(wing && accClaimed(wing)){
+    back = `<img class="acc-layer acc-wing" src="${wing.image}" alt="${wing.name}" style="position:absolute; left:${an.head.x*100}%; top:36%; width:${wing.w*100*0.9}%; transform:translate(-50%,-50%); pointer-events:none;">`;
+  }
   if(head && accClaimed(head)){
     const cx = (an.head.x + head.ox * an.head.s) * 100;
     const cy = (an.head.y + head.oy * an.head.s * an.aspect) * 100;
@@ -1238,6 +1301,7 @@ function princessStackHTML(outfit, H, opts){
     layers += `<img class="acc-layer acc-hand" src="${hand.image}" alt="${hand.name}" style="position:absolute; left:${an.hand.x*100}%; top:${an.hand.y*100}%; width:${hand.w*100}%; transform-origin:50% ${WAND_GRIP_Y}%; transform:translate(-50%,-${WAND_GRIP_Y}%) rotate(${an.hand.rot||0}deg); pointer-events:none;">`;
   }
   return `<div class="princess-stack" style="position:relative; width:${W}px; height:${H}px; margin:0 auto;">
+    ${back}
     <img src="${outfit.image}" alt="${outfit.name}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; filter:${outfit.filter||''} drop-shadow(0 6px 10px rgba(180,140,150,0.25));">
     ${layers}
   </div>`;
@@ -1265,9 +1329,12 @@ const SPECIAL_ACHIEVEMENT_ITEMS = [
   {id:"sa_bow",    icon:"🎀", name:"注音蝴蝶結", category:"hair",  need:20, statKey:"spellRounds",   obtainText:"拼音小高手完成 20 次", implemented:true, itemId:"acc_sa_bow"},
   {id:"sa_wand",   icon:"🪄", name:"音符魔法棒", category:"wand",  need:15, statKey:"toneRounds",    obtainText:"聲調大挑戰完成 15 次", implemented:true, itemId:"acc_sa_wand"},
   {id:"sa_rainbow",icon:"👗", name:"彩虹禮服",   category:"dress", need:30, statKey:"dailyRounds",   obtainText:"每日10題完成 30 次",   implemented:false},
+  {id:"sa_read_crown", icon:"👑", name:"讀題魔法皇冠", category:"crown", need:3, statKey:"readExams", obtainText:"完成 3 次學校模擬考", implemented:true, itemId:"acc_read_crown"},
+  {id:"sa_wing_star", icon:"🧚", name:"花園小仙子翅膀", category:"wing", need:10, statKey:"harvested", obtainText:"在秘密花園收成 10 朵花", implemented:true, itemId:"acc_wing_star"},
+  {id:"sa_wing_rainbow", icon:"🌈", name:"彩虹仙子翅膀", category:"wing", need:11, statKey:"flowerSpecies", obtainText:"魔法圖鑑收集全部 11 種花", implemented:true, itemId:"acc_wing_rainbow"},
   {id:"sa_crown",  icon:"👑", name:"注音皇冠",   category:"crown", need:37, statKey:"symbolMastery", obtainText:"熟練全部 37 個注音符號", implemented:true, itemId:"acc_sa_crown"},
 ];
-function achievementProgress(a){ return a.statKey === "symbolMastery" ? STATE.symbolMastery.length : (STATE.gameStats[a.statKey]||0); }
+function achievementProgress(a){ if(a.statKey === "harvested") return (STATE.garden && STATE.garden.harvested) || 0; if(a.statKey === "flowerSpecies") return STATE.garden ? Object.keys(STATE.garden.flowers).filter(k=>STATE.garden.flowers[k]>0).length : 0; if(a.statKey === "readExams") return (STATE.reading && STATE.reading.rounds.exam) || 0; return a.statKey === "symbolMastery" ? STATE.symbolMastery.length : (STATE.gameStats[a.statKey]||0); }
 function checkGameAchievements(){
   SPECIAL_ACHIEVEMENT_ITEMS.forEach(a=>{
     if(achievementProgress(a) >= a.need && !STATE.specialItemsUnlocked.includes(a.id)){
@@ -1489,6 +1556,8 @@ function render(){
     case "reading-play": renderReadingPlay(); break;
     case "reading-result": renderReadingResult(); break;
     case "reading-stats": renderReadingStats(); break;
+    case "garden": renderGarden(); break;
+    case "magic-album": renderMagicAlbum(); break;
     case "parent-lock": renderParentLock(); break;
     case "parent": renderParent(); break;
     default: renderHome();
@@ -1627,7 +1696,7 @@ function rdEnsureDay(){
   if(!r.reward || r.reward.day !== t) r.reward = {day:t, ids:[]};
 }
 function rdRecord(res, q){
-  const r = rdStat();
+  const r = rdStat(); if(STATE.garden) STATE.garden.learnDay = todayStr(); questRound("rdq");
   r.total += 1;
   if(res.intentChecked){ if(res.intentFirstTry) r.intent.ok += 1; else r.intent.wrong += 1; }
   if(res.ansOk) r.answer.ok += 1; else r.answer.wrong += 1;
@@ -1794,6 +1863,8 @@ function rdFinish(){
     const score = RD.results.filter(x=>x.ansOk).length;
     r.rounds.exam += 1; r.exams.push({ts:Date.now(), score, total:RD.qs.length}); if(r.exams.length > 30) r.exams.shift();
   } else r.rounds[RD.mode] += 1;
+  questRound("rdround");
+  checkGameAchievements();
   saveState();
   go('reading-result');
 }
@@ -1847,6 +1918,208 @@ function renderReadingStats(){
 }
 
 
+/* ---------------- 秘密花園 & 魔法圖鑑 ---------------- */
+const G_FLOWERS = {
+  f_tulip:{icon:"🌷",name:"粉紅鬱金香",tier:"common"}, f_daisy:{icon:"🌼",name:"小雛菊",tier:"common"},
+  f_cherry:{icon:"🌸",name:"櫻花",tier:"common"}, f_sun:{icon:"🌻",name:"向日葵",tier:"common"},
+  f_hibis:{icon:"🌺",name:"朱槿花",tier:"common"}, f_rosette:{icon:"🏵️",name:"圓圓花",tier:"common"},
+  f_rose:{icon:"🌹",name:"魔法玫瑰",tier:"rare"}, f_clover:{icon:"🍀",name:"幸運草",tier:"rare"},
+  f_snow:{icon:"💮",name:"白雪花",tier:"rare"}, f_mush:{icon:"🍄",name:"彩虹小蘑菇",tier:"rare"},
+  f_read:{icon:"💐",name:"讀題小花束",tier:"special"},
+};
+const G_TIER = {common:"普通", rare:"稀有", special:"特別"};
+const G_SEED_PRICE = 8, G_PLOT_PRICE = 15, G_PLOT_FREE = 3, G_PLOT_MAX = 6, G_WATER_NEED = 3;
+const G_COLLECT = { c_book:{icon:"📖", name:"魔法書", how:"讀題練習累積 100 題"} };
+function gState(){ return STATE.garden; }
+function gUnlocked(){ return STATE.reading.total >= 10 || gState().opened; }
+function todayLearned(){ return gState().learnDay === todayStr(); }
+function markLearned(){ if(STATE.garden) STATE.garden.learnDay = todayStr(); }
+function rdIntentAcc(){ const r = STATE.reading, n = r.intent.ok + r.intent.wrong; return {n, rate: n ? r.intent.ok / n : 0}; }
+const G_MILES = [
+  {id:"m10",  icon:"🌱", name:"打開秘密花園", text:"讀題練習 10 題", reward:"送 3 顆魔法花種子", ok:()=>STATE.reading.total>=10, prog:()=>[Math.min(STATE.reading.total,10),10]},
+  {id:"m30",  icon:"✨", name:"魔法種子",     text:"讀題練習 30 題", reward:"1 顆稀有魔法種子", ok:()=>STATE.reading.total>=30, prog:()=>[Math.min(STATE.reading.total,30),30]},
+  {id:"mint", icon:"💐", name:"讀題小花束",   text:"讀題理解答對率 80%（至少 10 題）", reward:"特別花：讀題小花束", ok:()=>{const a=rdIntentAcc();return a.n>=10&&a.rate>=0.8;}, prog:()=>{const a=rdIntentAcc();return [Math.min(a.n,10),10];}, note:"到「獨立讀題」做讀題理解小問題"},
+  {id:"mexam",icon:"👑", name:"讀題魔法皇冠", text:"完成 3 次學校模擬考", reward:"到公主的飾品領取皇冠", ok:()=>STATE.reading.rounds.exam>=3, prog:()=>[Math.min(STATE.reading.rounds.exam,3),3], auto:true},
+  {id:"m100", icon:"📖", name:"魔法書",       text:"讀題練習 100 題", reward:"特別收藏品：魔法書", ok:()=>STATE.reading.total>=100, prog:()=>[Math.min(STATE.reading.total,100),100]},
+];
+function gMileClaimed(m){ return m.auto ? STATE.ownedAccessories.includes("acc_read_crown") : gState().claimed.includes(m.id); }
+function gClaim(id){
+  const g = gState(), m = G_MILES.find(x=>x.id===id);
+  if(!m || m.auto || !m.ok() || g.claimed.includes(id)) return false;
+  g.claimed.push(id);
+  if(id==="m10"){ g.seeds.normal += 3; g.opened = true; }
+  if(id==="m30") g.seeds.magic += 1;
+  if(id==="mint") g.flowers.f_read = (g.flowers.f_read||0) + 1;
+  if(id==="m100") g.items.push("c_book");
+  saveState(); return true;
+}
+function gPlant(i, kind){
+  const g = gState(), p = g.plots[i];
+  if(i >= g.openPlots || p || g.seeds[kind] < 1) return false;
+  g.seeds[kind] -= 1; g.plots[i] = {kind, water:0, lastWater:""}; saveState(); return true;
+}
+function gCanWater(p){ return p && p.water < G_WATER_NEED && p.lastWater !== todayStr(); }
+function gWater(i){
+  const p = gState().plots[i];
+  if(!gCanWater(p) || !todayLearned()) return false;
+  p.water += 1; p.lastWater = todayStr(); questRound("water"); saveState(); return true;
+}
+function gHarvest(i){
+  const g = gState(), p = g.plots[i];
+  if(!p || p.water < G_WATER_NEED) return null;
+  const pool = Object.keys(G_FLOWERS).filter(k=>G_FLOWERS[k].tier === (p.kind==="magic" ? "rare" : "common"));
+  const fid = pool[Math.floor(Math.random()*pool.length)];
+  g.flowers[fid] = (g.flowers[fid]||0) + 1; g.harvested += 1; g.plots[i] = null; saveState(); return fid;
+}
+function gBuySeed(){ if(STATE.gems < G_SEED_PRICE) return false; STATE.gems -= G_SEED_PRICE; gState().seeds.normal += 1; saveState(); return true; }
+function gBuyPlot(){ const g = gState(); if(g.openPlots >= G_PLOT_MAX || STATE.gems < G_PLOT_PRICE) return false; STATE.gems -= G_PLOT_PRICE; g.openPlots += 1; saveState(); return true; }
+
+const G_DECOR = {
+  d_rainbow:{icon:"🌈",name:"彩虹",price:80,x:50,y:6,sz:64,z:0},
+  d_cabin:{icon:"🏡",name:"小木屋",price:100,x:84,y:38,sz:46,z:1},
+  d_fountain:{icon:"⛲",name:"小噴泉",price:60,x:50,y:44,sz:44,z:2},
+  d_lamp:{icon:"🏮",name:"花園燈",price:25,x:10,y:48,sz:30,z:2},
+  d_bird:{icon:"🐦",name:"小鳥",price:30,x:16,y:16,sz:26,z:3,fly:"gFloat"},
+  d_butterfly:{icon:"🦋",name:"小蝴蝶",price:40,x:30,y:30,sz:28,z:3,fly:"gFlutter"},
+  d_bee:{icon:"🐝",name:"小蜜蜂",price:35,x:68,y:24,sz:24,z:3,fly:"gFlutter"},
+  d_ladybug:{icon:"🐞",name:"瓢蟲",price:20,x:38,y:70,sz:20,z:3},
+};
+function gDecorBuy(id){
+  const g = gState(), d = G_DECOR[id];
+  if(!d || g.decor.owned.includes(id) || STATE.gems < d.price) return false;
+  STATE.gems -= d.price; g.decor.owned.push(id); g.decor.placed.push(id); saveState(); return true;
+}
+function gDecorToggle(id){
+  const g = gState(); if(!g.decor.owned.includes(id)) return false;
+  const i = g.decor.placed.indexOf(id); if(i >= 0) g.decor.placed.splice(i,1); else g.decor.placed.push(id);
+  saveState(); return true;
+}
+function gSceneHTML(){
+  const g = gState();
+  const items = g.decor.placed.filter(id=>G_DECOR[id]).sort((a,b)=>G_DECOR[a].z-G_DECOR[b].z).map(id=>{ const d=G_DECOR[id];
+    return `<div class="g-dec ${d.fly||''}" style="left:${d.x}%;top:${d.y}%;font-size:${d.sz}px;z-index:${d.z};">${d.icon}</div>`; }).join("");
+  const fl = Object.keys(G_FLOWERS).filter(k=>g.flowers[k]>0).slice(0,12).map((k,i)=>`<span class="g-sf" style="left:${6+i*7.6}%;">${G_FLOWERS[k].icon}</span>`).join("");
+  return `<div class="g-scene">${items}<div class="g-ground">${fl}</div></div>`;
+}
+function plotHTML(i){
+  const g = gState(), p = g.plots[i];
+  if(i >= g.openPlots) return `<div class="g-plot locked" data-plot="${i}"><div class="g-ico">🔒</div><div class="g-lab">💎${G_PLOT_PRICE}</div></div>`;
+  if(!p) return `<div class="g-plot empty" data-plot="${i}"><div class="g-ico">🟫</div><div class="g-lab">空的花圃</div></div>`;
+  const stage = ["🌰","🌱","🌿","🌸"][p.water], bloom = p.water >= G_WATER_NEED;
+  const lab = bloom ? "開花了！收成" : (p.lastWater === todayStr() ? "今天澆過了 ✓" : "可以澆水 💧");
+  return `<div class="g-plot ${bloom?'bloom':''} ${p.kind==='magic'?'magic':''}" data-plot="${i}"><div class="g-ico">${stage}</div><div class="g-lab">${lab}</div><div class="g-dots">${[0,1,2].map(k=>k<p.water?"💧":"▫️").join("")}</div></div>`;
+}
+function renderGarden(){
+  if(!gUnlocked()){ ROUTE = {name:"home"}; toast("完成 10 題讀題練習，就能打開秘密花園唷 ♡"); render(); return; }
+  app.appendChild(topStatsBar());
+  const g = gState();
+  const s = document.createElement('div'); s.className = "screen";
+  const claimable = G_MILES.filter(m=>!m.auto && m.ok() && !g.claimed.includes(m.id));
+  const learned = todayLearned();
+  s.innerHTML = `
+    <div class="header-row"><div class="back-btn" id="backBtn">←</div><h2>🌷 秘密花園</h2></div>
+    <div class="g-info">🌰 種子 ${g.seeds.normal}　✨ 魔法種子 ${g.seeds.magic}　🌼 收成 ${g.harvested}</div>
+    <div class="g-water ${learned?'ok':''}">${learned ? "💧 今天學過了，可以幫花澆水！" : "先到遊戲或讀題做幾題，才有水可以澆花喔"}</div>
+    ${gSceneHTML()}
+    <div class="g-grid">${Array.from({length:G_PLOT_MAX},(_,i)=>plotHTML(i)).join("")}</div>
+    <div class="g-actions">
+      <button class="rd-btn main" id="seedBtn">🌰 買種子 💎${G_SEED_PRICE}</button>
+      <button class="rd-btn ghost" id="albumBtn">📔 魔法圖鑑</button>
+    </div>
+    <div class="g-sec">🎀 花園裝飾（點一下購買／擺放／收起）</div>
+    <div class="g-decgrid">${Object.keys(G_DECOR).map(id=>{ const d=G_DECOR[id], own=g.decor.owned.includes(id), on=g.decor.placed.includes(id);
+      return `<div class="g-decitem ${own?'own':''} ${on?'on':''}" data-dec="${id}"><div style="font-size:30px;${own?'':'filter:grayscale(.6);opacity:.7'}">${d.icon}</div><div class="g-dn">${d.name}</div><div class="g-dp">${own?(on?"擺放中":"已收起"):"💎"+d.price}</div></div>`; }).join("")}</div>
+    <div class="g-sec">📚 讀題獎勵</div>
+    ${G_MILES.map(m=>{ const [a,b] = m.prog(), done = gMileClaimed(m), can = m.ok() && !done && !m.auto;
+      return `<div class="g-mile ${done?'done':''}"><div class="g-mi">${m.icon}</div><div class="g-mt"><b>${m.name}</b><br><span>${m.text}</span><br><span class="g-rw">🎁 ${m.reward}</span>${m.note&&!m.ok()?`<br><span class="g-note">${m.note}</span>`:''}<div class="g-bar"><i style="width:${Math.round(a/b*100)}%"></i></div></div>
+        <div class="g-mb">${done?"✅":can?`<button class="rd-btn main" data-claim="${m.id}">領取</button>`:m.auto&&m.ok()?"去公主頁領":`${a}/${b}`}</div></div>`; }).join("")}`;
+  app.appendChild(s); attachGear(app);
+  s.querySelector('#backBtn').addEventListener('click', ()=> go('home'));
+  s.querySelector('#albumBtn').addEventListener('click', ()=> go('magic-album'));
+  s.querySelector('#seedBtn').addEventListener('click', ()=>{ if(gBuySeed()){ toast("買到 1 顆種子 🌰"); refreshKeepScroll(); } else toast("鑽石不夠唷，再多練習一下吧 ♡"); });
+  s.querySelectorAll('[data-dec]').forEach(el=> el.addEventListener('click', ()=>{
+    const id = el.dataset.dec, d = G_DECOR[id];
+    if(g.decor.owned.includes(id)){ gDecorToggle(id); refreshKeepScroll(); return; }
+    confirmDialog(`要用 ${d.price} 顆鑽石買「${d.name}」嗎？`, ()=>{ if(gDecorBuy(id)){ toast(`${d.icon} 擺進花園了！`); refreshKeepScroll(); } else toast("鑽石不夠唷，再多練習一下吧 ♡"); });
+  }));
+  s.querySelectorAll('[data-claim]').forEach(b=> b.addEventListener('click', ()=>{ if(gClaim(b.dataset.claim)){ toast("🎁 領到了！"); refreshKeepScroll(); } }));
+  s.querySelectorAll('[data-plot]').forEach(el=> el.addEventListener('click', ()=> gPlotTap(+el.dataset.plot)));
+}
+function gPlotTap(i){
+  const g = gState(), p = g.plots[i];
+  if(i >= g.openPlots){
+    if(i !== g.openPlots){ toast("要先打開前面的花圃唷"); return; }
+    confirmDialog(`要用 ${G_PLOT_PRICE} 顆鑽石打開新花圃嗎？`, ()=>{ if(gBuyPlot()){ toast("新花圃打開了 🌱"); refreshKeepScroll(); } else toast("鑽石不夠唷 ♡"); });
+    return;
+  }
+  if(!p){
+    const opts = [];
+    if(g.seeds.normal > 0) opts.push("normal"); if(g.seeds.magic > 0) opts.push("magic");
+    if(!opts.length){ toast("還沒有種子，可以買種子或完成讀題獎勵 ♡"); return; }
+    const kind = opts.includes("magic") ? null : "normal";
+    if(kind){ gPlant(i, kind); toast("種下去了 🌱 學習後記得來澆水"); refreshKeepScroll(); return; }
+    const ov = document.createElement('div'); ov.className = "confirm-overlay";
+    ov.innerHTML = `<div class="confirm-box"><p>要種哪一種種子？</p><div class="confirm-btns" style="flex-direction:column;gap:8px;">
+      ${g.seeds.normal>0?`<button class="rd-btn main" data-k="normal">🌰 普通種子（${g.seeds.normal}）</button>`:''}
+      <button class="rd-btn main" data-k="magic">✨ 魔法種子（${g.seeds.magic}）→ 稀有花</button>
+      <button class="rd-btn ghost" data-k="x">取消</button></div></div>`;
+    document.body.appendChild(ov);
+    ov.querySelectorAll('[data-k]').forEach(b=> b.addEventListener('click', ()=>{ const k=b.dataset.k; ov.remove(); if(k!=="x" && gPlant(i,k)){ toast("種下去了 🌱"); refreshKeepScroll(); } }));
+    return;
+  }
+  if(p.water >= G_WATER_NEED){
+    const f = gHarvest(i); const fl = G_FLOWERS[f];
+    const ov = document.createElement('div'); ov.className = "confirm-overlay";
+    ov.innerHTML = `<div class="confirm-box"><div style="font-size:18px;font-weight:800;color:var(--pink-deep);">🌸 開花了！</div><div style="font-size:64px;margin:10px 0;">${fl.icon}</div><p>${fl.name}（${G_TIER[fl.tier]}）<br><span style="font-size:12px;">已放進魔法圖鑑</span></p><div class="confirm-btns"><button class="rd-btn main" id="okF">太棒了</button></div></div>`;
+    document.body.appendChild(ov); ov.querySelector('#okF').addEventListener('click', ()=>{ ov.remove(); refreshKeepScroll(); });
+    return;
+  }
+  if(p.lastWater === todayStr()){ toast("今天已經澆過水了，明天再來 ♡"); return; }
+  if(!todayLearned()){ toast("先去玩遊戲或讀題，再回來澆水喔 ♡"); return; }
+  if(gWater(i)) { toast("💧 澆水囉！"); refreshKeepScroll(); }
+}
+/* 徽章（依既有紀錄自動取得，只顯示、不給額外獎勵）*/
+const G_BADGES = [
+  {id:"b_careful", icon:"🔍", name:"細心小公主", text:"細心讀題完成 5 回", prog:()=>[STATE.reading.rounds.careful,5]},
+  {id:"b_tone",    icon:"🎵", name:"聲調小高手", text:"聲調大挑戰完成 10 次", prog:()=>[STATE.gameStats.toneRounds,10]},
+  {id:"b_spell",   icon:"🔤", name:"拼音魔法師", text:"拼音小高手完成 10 次", prog:()=>[STATE.gameStats.spellRounds,10]},
+  {id:"b_read",    icon:"📚", name:"認真讀題達人", text:"讀題理解答對率 80%（至少 10 題）", prog:()=>{const a=rdIntentAcc();return a.n>=10&&a.rate>=0.8?[1,1]:[Math.min(a.n,10)>=10?0:0,1];}},
+  {id:"b_exam",    icon:"🏆", name:"模擬考挑戰王", text:"完成 3 次學校模擬考", prog:()=>[STATE.reading.rounds.exam,3]},
+  {id:"b_garden",  icon:"🌷", name:"小園丁", text:"收成 5 朵花", prog:()=>[gState().harvested,5]},
+];
+let ALBUM_TAB = "flower";
+function renderMagicAlbum(){
+  app.appendChild(topStatsBar());
+  const g = gState();
+  const s = document.createElement('div'); s.className = "screen";
+  const tabs = [["flower","🌸 花朵"],["badge","🏅 徽章"],["item","⭐ 收藏"]];
+  let body = "";
+  if(ALBUM_TAB === "flower"){
+    const got = Object.keys(G_FLOWERS).filter(k=>g.flowers[k]>0).length;
+    body = `<div class="g-info">已收集 ${got} / ${Object.keys(G_FLOWERS).length}</div><div class="a-grid">${Object.keys(G_FLOWERS).map(k=>{ const f=G_FLOWERS[k], n=g.flowers[k]||0;
+      return `<div class="a-card ${n?'':'unk'} t-${f.tier}"><div class="a-ico">${n?f.icon:"❓"}</div><div class="a-name">${n?f.name:"？？？"}</div><div class="a-sub">${G_TIER[f.tier]}${n?` ×${n}`:""}</div></div>`; }).join("")}</div>`;
+  } else if(ALBUM_TAB === "badge"){
+    body = `<div class="a-list">${G_BADGES.map(b=>{ const [a,n]=b.prog(), done=a>=n;
+      return `<div class="g-mile ${done?'done':''}"><div class="g-mi" style="${done?'':'filter:grayscale(1);opacity:.5'}">${b.icon}</div><div class="g-mt"><b>${b.name}</b><br><span>${b.text}</span><div class="g-bar"><i style="width:${Math.min(100,Math.round(a/n*100))}%"></i></div></div><div class="g-mb">${done?"✅":`${Math.min(a,n)}/${n}`}</div></div>`; }).join("")}</div>`;
+  } else {
+    const crown = STATE.ownedAccessories.includes("acc_read_crown");
+    body = `<div class="a-list">
+      ${Object.keys(G_COLLECT).map(k=>{ const has = g.items.includes(k); return `<div class="g-mile ${has?'done':''}"><div class="g-mi" style="${has?'':'filter:grayscale(1);opacity:.5'}">${G_COLLECT[k].icon}</div><div class="g-mt"><b>${has?G_COLLECT[k].name:"？？？"}</b><br><span>${G_COLLECT[k].how}</span></div><div class="g-mb">${has?"✅":"🔒"}</div></div>`; }).join("")}
+      <div class="g-mile ${crown?'done':''}"><div class="g-mi" style="${crown?'':'filter:grayscale(1);opacity:.5'}">👑</div><div class="g-mt"><b>${crown?"讀題魔法皇冠":"？？？"}</b><br><span>完成 3 次學校模擬考</span></div><div class="g-mb">${crown?"✅":"🔒"}</div></div></div>`;
+  }
+  s.innerHTML = `<div class="header-row"><div class="back-btn" id="backBtn">←</div><h2>📔 魔法圖鑑</h2></div>
+    <div class="a-tabs">${tabs.map(t=>`<button class="a-tab ${ALBUM_TAB===t[0]?'on':''}" data-tab="${t[0]}">${t[1]}</button>`).join("")}</div>${body}`;
+  app.appendChild(s); attachGear(app);
+  s.querySelector('#backBtn').addEventListener('click', ()=> go(gUnlocked()?'garden':'home'));
+  s.querySelectorAll('[data-tab]').forEach(b=> b.addEventListener('click', ()=>{ ALBUM_TAB = b.dataset.tab; refreshKeepScroll(); }));
+}
+
+// 房間裡的小兔兔也可以點一下，會動
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest && e.target.closest('.room-bunny'); if(!b) return;
+  const an = pickRandom(["bunnyHop .5s","bunnyWiggle .6s","bunnySquish .6s","bunnySpin .8s","bunnyBounce3 .9s"]);
+  b.style.animation = "none"; void b.offsetWidth; b.style.animation = an;
+});
 /* ---------------- HOME ---------------- */
 function renderHome(){
   const bar = topStatsBar();
@@ -1863,6 +2136,7 @@ function renderHome(){
         <div class="emoji">👑</div><div class="label">我的公主</div>
       </div>
       <div class="tile wide c-butter" data-go="reading" style="background:linear-gradient(135deg,var(--butter),var(--mint));"><div class="emoji">📚</div><div class="label">讀題魔法學院</div></div>
+      <div class="tile wide c-mint" data-go="garden" style="background:linear-gradient(135deg,var(--mint),var(--pink));"><div class="emoji">🌷</div><div class="label">秘密花園${typeof gUnlocked==="function"&&!gUnlocked()?" 🔒":""}</div></div>
       <div class="tile c-pink" data-go="table"><div class="emoji">📖</div><div class="label">注音總表</div></div>
       <div class="tile c-butter" data-go="stroke-table"><div class="emoji">✍️</div><div class="label">看筆順</div></div>
       <div class="tile c-lav" data-go="listen"><div class="emoji">🔊</div><div class="label">聽音找注音</div></div>
@@ -2731,7 +3005,7 @@ function renderPrincess(){
       ${roomStageHTML(Math.min(320, window.innerWidth-72))}
     </div>
     <div style="font-size:12px; color:var(--ink-soft); font-weight:700;">${curOutfit.name}</div>
-    <div class="feedback-msg" id="bunnySpeech" style="min-height:20px;"></div>
+    <div class="feedback-msg" id="bunnySpeech" style="min-height:20px;">👆 點點小兔兔，牠會動喔 ♡</div>
     <div style="font-size:13px; font-weight:800; color:var(--ink); margin-top:4px;">⭐ ${STATE.stars}${info.next ? ` / ${info.next.need}` : ""}</div>
     ${info.next ? `
       <div class="hold-progress" style="margin-top:6px;"><div class="fill" style="width:${progressToNext}%;"></div></div>
@@ -2793,6 +3067,8 @@ function renderPrincess(){
     ${featureTileHTML("room","c-lav")}
     ${featureTileHTML("bunny","c-mint")}
     ${featureTileHTML("castle","c-butter")}
+    <div class="tile c-mint" id="gardenTile"><div class="emoji">🌷</div><div class="label">秘密花園</div>${gUnlocked()?'':'<div style="font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:2px;">🔒 讀題 10 題</div>'}</div>
+    <div class="tile c-lav" data-go="magic-album"><div class="emoji">📔</div><div class="label">魔法圖鑑</div></div>
     <div class="tile c-pink" data-go="album"><div class="emoji">🏆</div><div class="label">收藏冊</div></div>
   `;
   s.appendChild(grid);
@@ -2813,6 +3089,7 @@ function renderPrincess(){
   s.querySelectorAll('[data-go]').forEach(el=>{
     el.addEventListener('click', ()=> go(el.getAttribute('data-go')));
   });
+  s.querySelector('#gardenTile').addEventListener('click', ()=>{ if(gUnlocked()) go('garden'); else toast("完成 10 題讀題練習，就能打開秘密花園唷 ♡"); });
   const stage = s.querySelector('#princessStage');
   const bunnySpeech = s.querySelector('#bunnySpeech');
   stage.addEventListener('click', ()=>{
@@ -2990,16 +3267,16 @@ function renderAccessories(){
   s.appendChild(header);
 
   const cur = getOutfit(STATE.equippedOutfit);
-  const head = accById(STATE.equippedHeadAccessory), hand = accById(STATE.equippedHandAccessory);
+  const head = accById(STATE.equippedHeadAccessory), hand = accById(STATE.equippedHandAccessory), back = accById(STATE.equippedBackAccessory);
   const preview = document.createElement('div');
   preview.className = "stat-card";
   preview.style.cssText += "text-align:center; background:linear-gradient(180deg, #F3E9FB 0%, #FFF8EF 70%);";
   preview.innerHTML = `
     ${princessStackHTML(cur, 230)}
     <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-top:6px;">
-      頭上：${head ? head.name : "沒有"}　手上：${hand ? hand.name : "沒有"}
+      頭上：${head ? head.name : "沒有"}　手上：${hand ? hand.name : "沒有"}　背上：${back ? back.name : "沒有"}
     </div>
-    ${(head||hand) ? `<div class="action-btn secondary" id="clearAcc" style="margin:10px auto 0; padding:8px 18px; width:auto; display:inline-block; font-size:13px;">全部卸下</div>` : ``}`;
+    ${(head||hand||back) ? `<div class="action-btn secondary" id="clearAcc" style="margin:10px auto 0; padding:8px 18px; width:auto; display:inline-block; font-size:13px;">全部卸下</div>` : ``}`;
   s.appendChild(preview);
 
   if(STATE.pendingRewards.some(id=> REWARD_GIFTS[id].type==="accessory")){
@@ -3028,7 +3305,7 @@ function renderAccessories(){
     card.style.cssText += "aspect-ratio:auto; padding:10px 6px; gap:4px;";
     let status;
     if(eq) status = "✨ 穿戴中";
-    else if(owned) status = a.slot==="hand" ? "使用" : "戴上";
+    else if(owned) status = a.slot==="hand" ? "使用" : a.slot==="back" ? "背上" : "戴上";
     else status = accObtain(a).text.replace("✓ 已取得","");
     if(!owned && a.unlockType==="diamond") status = "🔒 💎" + a.price;
     if(!owned && a.unlockType==="achievement"){ const sa = SPECIAL_ACHIEVEMENT_ITEMS.find(x=>x.id===a.saId); status = saStatus(sa)==="claimable" ? "🏆 可領取" : `🏆 ${Math.min(sa.need, achievementProgress(sa))}/${sa.need}`; }
@@ -3041,7 +3318,7 @@ function renderAccessories(){
     card.addEventListener('click', ()=>{
       if(owned){
         if(eq){ unequipAccessory(a.slot); toast(a.name + " 已卸下"); }
-        else { equipAccessory(a.id); toast(a.name + (a.slot==="hand" ? " 拿在手上了 ♡" : " 戴好了 ♡")); }
+        else { equipAccessory(a.id); toast(a.name + (a.slot==="hand" ? " 拿在手上了 ♡" : a.slot==="back" ? " 背好了 ♡" : " 戴好了 ♡")); }
         refreshKeepScroll(); return;
       }
       if(a.unlockType === "level"){
@@ -3070,7 +3347,7 @@ function renderAccessories(){
   header.querySelector('#backBtn').addEventListener('click', ()=> go('princess'));
   tabs.querySelectorAll('[data-tab]').forEach(el=> el.addEventListener('click', ()=>{ ACC_TAB = el.getAttribute('data-tab'); refreshKeepScroll(); }));
   const clr = s.querySelector('#clearAcc');
-  if(clr) clr.addEventListener('click', ()=>{ unequipAccessory("head"); unequipAccessory("hand"); toast("飾品都卸下了"); refreshKeepScroll(); });
+  if(clr) clr.addEventListener('click', ()=>{ unequipAccessory("head"); unequipAccessory("hand"); unequipAccessory("back"); toast("飾品都卸下了"); refreshKeepScroll(); });
   attachGear(app);
 }
 
@@ -3210,7 +3487,7 @@ function renderBunny(){
     <div id="bunnyTalk" class="feedback-msg" style="min-height:22px;">${bunnyLine()}</div>
     <div style="font-size:22px; letter-spacing:4px; margin-top:4px;">${[0,1,2,3,4].map(i=> i<hearts ? "💗" : "🤍").join("")}</div>
     <div class="hold-progress" style="margin-top:6px;"><div class="fill" style="width:${aff}%;"></div></div>
-    <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-top:6px;">好感度 ${aff} / ${BUNNY_MAX}${aff < BUNNY_BOW_AT ? `　·　好感度 ${BUNNY_BOW_AT} 會戴上蝴蝶結 🎀` : `　·　🎀 已戴上蝴蝶結`}</div>`;
+    <div style="font-size:12px; color:var(--ink-soft); font-weight:700; margin-top:6px;">👆 點點小兔兔，牠會動喔！<br>好感度 ${aff} / ${BUNNY_MAX}${aff < BUNNY_BOW_AT ? `　·　好感度 ${BUNNY_BOW_AT} 會戴上蝴蝶結 🎀` : `　·　🎀 已戴上蝴蝶結`}</div>`;
   s.appendChild(card);
   const row = document.createElement('div');
   row.className = "options";
@@ -3231,7 +3508,21 @@ function renderBunny(){
     const img = s.querySelector('#bunnyImg'); img.style.animation = "none"; void img.offsetWidth; img.style.animation = "bunnyHop .5s";
     s.querySelector('#bunnyTalk').textContent = msg;
   }
-  s.querySelector('#bunnyBox').addEventListener('click', ()=> hop(bunnyLine()));
+  let tapN = 0, tapT = 0;
+  const ANIMS = [["bunnyHop .5s",["蹦蹦跳～","嘿嘿 ♡"]],["bunnyWiggle .6s",["扭扭～","好癢喔 ♡"]],["bunnySquish .6s",["噗～","軟軟的 ♡"]],["bunnySpin .8s",["轉圈圈～！","耶～"]],["bunnyBounce3 .9s",["跳跳跳！","好開心 ♡"]],["bunnyNuzzle .6s",["蹭蹭你 ♡","最喜歡你了"]]];
+  s.querySelector('#bunnyBox').addEventListener('click', (ev)=>{
+    const now = Date.now(); tapN = (now - tapT < 900) ? tapN + 1 : 1; tapT = now;
+    const img = s.querySelector('#bunnyImg'), box = s.querySelector('#bunnyBox');
+    const a = tapN >= 5 ? ["bunnySpin .8s",["哈哈哈好癢～別摸啦！","哇～頭暈暈 ♡"]] : pickRandom(ANIMS);
+    img.style.animation = "none"; void img.offsetWidth; img.style.animation = a[0];
+    s.querySelector('#bunnyTalk').textContent = pickRandom(a[1]);
+    const r = box.getBoundingClientRect();
+    const n = tapN >= 5 ? 5 : 2;
+    for(let i=0;i<n;i++){ const h = document.createElement('div'); h.className = "b-heart"; h.textContent = pickRandom(["💗","💖","✨","💕"]);
+      h.style.left = (r.width*(0.25+Math.random()*0.5))+"px"; h.style.top = (r.height*0.25)+"px"; h.style.setProperty('--dx', ((Math.random()-0.5)*60)+"px");
+      box.appendChild(h); setTimeout(()=>h.remove(), 1200); }
+    try{ if(navigator.vibrate) navigator.vibrate(15); }catch(e){}
+  });
   const stay = (msg, bow0)=>{
     // 重新繪製但保留說話內容
     refreshKeepScroll();

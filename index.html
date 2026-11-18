@@ -1276,6 +1276,7 @@ const OUTFIT_ANCHORS = {
   o7: {aspect:420/709, head:{x:.52,y:.110,s:.50,rot:0},  hand:{x:.71,y:.47,rot:12}},
   o8: {aspect:420/737, head:{x:.50,y:.100,s:.50,rot:0},  hand:{x:.89,y:.57,rot:14}},
   o9: {aspect:420/703, head:{x:.49,y:.090,s:.50,rot:0},  hand:{x:.16,y:.52,rot:-14}},
+  o11:{aspect:420/696, head:{x:.50,y:.075,s:.50,rot:0},  hand:{x:.86,y:.50,rot:14}},
   o10:{aspect:420/708, head:{x:.50,y:.110,s:.50,rot:0},  hand:{x:.91,y:.31,rot:10}},
 };
 const WAND_GRIP_Y = 78; // 魔法棒圖片中「握把」的位置（% 高度）
@@ -1328,7 +1329,7 @@ function checkAchievements(){
 const SPECIAL_ACHIEVEMENT_ITEMS = [
   {id:"sa_bow",    icon:"🎀", name:"注音蝴蝶結", category:"hair",  need:20, statKey:"spellRounds",   obtainText:"拼音小高手完成 20 次", implemented:true, itemId:"acc_sa_bow"},
   {id:"sa_wand",   icon:"🪄", name:"音符魔法棒", category:"wand",  need:15, statKey:"toneRounds",    obtainText:"聲調大挑戰完成 15 次", implemented:true, itemId:"acc_sa_wand"},
-  {id:"sa_rainbow",icon:"👗", name:"彩虹禮服",   category:"dress", need:30, statKey:"dailyRounds",   obtainText:"每日10題完成 30 次",   implemented:false},
+  {id:"sa_rainbow",icon:"👗", name:"彩虹禮服",   category:"dress", need:30, statKey:"dailyRounds",   obtainText:"每日10題完成 30 次",   implemented:true, outfitId:"o11"},
   {id:"sa_read_crown", icon:"👑", name:"讀題魔法皇冠", category:"crown", need:3, statKey:"readExams", obtainText:"完成 3 次學校模擬考", implemented:true, itemId:"acc_read_crown"},
   {id:"sa_wing_star", icon:"🧚", name:"花園小仙子翅膀", category:"wing", need:10, statKey:"harvested", obtainText:"在秘密花園收成 10 朵花", implemented:true, itemId:"acc_wing_star"},
   {id:"sa_wing_rainbow", icon:"🌈", name:"彩虹仙子翅膀", category:"wing", need:11, statKey:"flowerSpecies", obtainText:"魔法圖鑑收集全部 11 種花", implemented:true, itemId:"acc_wing_rainbow"},
@@ -1345,6 +1346,7 @@ function checkGameAchievements(){
 // 成就限定飾品：條件達成後可領取（領取＝加入 ownedAccessories）
 function saStatus(a){
   if(a.itemId && STATE.ownedAccessories.includes(a.itemId)) return "claimed";
+  if(a.outfitId && STATE.unlockedOutfits.includes(a.outfitId)) return "claimed";
   if(!STATE.specialItemsUnlocked.includes(a.id)) return "locked";
   return a.implemented ? "claimable" : "soon";
 }
@@ -1352,11 +1354,14 @@ function claimableAchievements(){ return SPECIAL_ACHIEVEMENT_ITEMS.filter(a=>saS
 function claimAchievement(id){
   const a = SPECIAL_ACHIEVEMENT_ITEMS.find(x=>x.id===id);
   if(!a || saStatus(a) !== "claimable") return false;
-  STATE.ownedAccessories.push(a.itemId); saveState(); return true;
+  if(a.outfitId){ if(!STATE.unlockedOutfits.includes(a.outfitId)) STATE.unlockedOutfits.push(a.outfitId); }
+  else STATE.ownedAccessories.push(a.itemId);
+  saveState(); return true;
 }
 function showAchievementClaim(id){
   const a = SPECIAL_ACHIEVEMENT_ITEMS.find(x=>x.id===id); if(!a || saStatus(a)!=="claimable") return;
-  const acc = accById(a.itemId);
+  const isOutfit = !!a.outfitId;
+  const acc = isOutfit ? getOutfit(a.outfitId) : accById(a.itemId);
   const overlay = document.createElement('div');
   overlay.className = "confirm-overlay";
   overlay.innerHTML = `
@@ -1375,7 +1380,7 @@ function showAchievementClaim(id){
   overlay.querySelector('#saClaim').addEventListener('click', ()=>{
     overlay.remove();
     if(!claimAchievement(id)) return;
-    const wear = acc.slot==="hand" ? "馬上使用" : "馬上戴上";
+    const wear = isOutfit ? "馬上換上" : acc.slot==="hand" ? "馬上使用" : "馬上戴上";
     const o2 = document.createElement('div');
     o2.className = "confirm-overlay";
     o2.innerHTML = `<div class="confirm-box"><div style="font-size:20px; font-weight:800; color:var(--pink-deep);">✨ 恭喜獲得！</div>
@@ -1385,7 +1390,7 @@ function showAchievementClaim(id){
       <button class="action-btn primary" id="c2Wear" style="margin:0; white-space:nowrap; padding-left:10px; padding-right:10px;">${wear}</button></div></div>`;
     document.body.appendChild(o2);
     o2.querySelector('#c2Ok').addEventListener('click', ()=>{ o2.remove(); render(); });
-    o2.querySelector('#c2Wear').addEventListener('click', ()=>{ o2.remove(); equipAccessory(acc.id); toast(acc.name + (acc.slot==='hand' ? " 拿在手上了 ♡" : " 戴好了 ♡")); render(); });
+    o2.querySelector('#c2Wear').addEventListener('click', ()=>{ o2.remove(); if(isOutfit){ STATE.equippedOutfit = acc.id; saveState(); toast(acc.name + " 換好了 ♡"); render(); return; } equipAccessory(acc.id); toast(acc.name + (acc.slot==='hand' ? " 拿在手上了 ♡" : " 戴好了 ♡")); render(); });
   });
 }
 function recordSymbolMastery(sym){
@@ -2854,6 +2859,7 @@ const OUTFITS = [
   {id:"o8",  name:"星空魔法洋裝",   price:150, levelReq:4, source:"diamond", image:"assets/princess/outfit08.png", filter:""},
   {id:"o9",  name:"幸運草洋裝",     price:120, levelReq:0, source:"diamond", image:"assets/princess/outfit09.png", filter:""},
   {id:"o10", name:"冬日公主洋裝",   price:140, levelReq:0, source:"diamond", image:"assets/princess/outfit10.png", filter:""},
+  {id:"o11", name:"彩虹禮服",       price:0,   levelReq:0, source:"achievement", saId:"sa_rainbow", image:"assets/princess/outfit11.png", filter:""},
 ];
 function getOutfit(id){ return OUTFITS.find(o=>o.id===id) || OUTFITS[0]; }
 // 一件洋裝目前是否已經「鑽石足夠但等級不夠」而鎖著
@@ -3214,6 +3220,10 @@ function renderAlbum(){
     const got = STATE.unlockedOutfits.includes(o.id);
     const thumb = `<img src="${o.image}" alt="${o.name}" style="width:34px; height:34px; object-fit:contain; object-position:center;">`;
     if(got) return albumRow(thumb, o.name, "✓ 已取得", "got");
+    if(o.source === "achievement"){
+      const sa = SPECIAL_ACHIEVEMENT_ITEMS.find(x=>x.id===o.saId);
+      return saStatus(sa) === "claimable" ? albumRow(thumb, o.name, "🏆 條件達成，可領取", "gift", "sa:"+sa.id) : albumRow(thumb, o.name, `🏆 ${sa.obtainText}（${Math.min(sa.need, achievementProgress(sa))}/${sa.need}）`, "locked");
+    }
     if(o.source === "level"){
       return giftStatus("r_limited_dress") === "claimable"
         ? albumRow(thumb, o.name, "🎁 可領取", "gift", "r_limited_dress")
@@ -3237,7 +3247,7 @@ function renderAlbum(){
     const achieved = STATE.specialItemsUnlocked.includes(a.id);
     const prog = Math.min(a.need, achievementProgress(a));
     const st = saStatus(a);
-    const ic = a.itemId ? accThumb(accById(a.itemId)) : a.icon;
+    const ic = a.itemId ? accThumb(accById(a.itemId)) : a.outfitId ? `<img src="${getOutfit(a.outfitId).image}" style="width:34px;height:34px;object-fit:contain;">` : a.icon;
     if(st === "claimed") return albumRow(ic, a.name, "✓ 已取得", "got");
     if(st === "claimable") return albumRow(ic, a.name, "🏆 條件達成，可領取", "gift", "sa:"+a.id);
     if(achieved && !a.implemented) return albumRow(a.icon, a.name, `🚧 即將開放（條件已達成：${a.obtainText}）`, "soon");
@@ -3576,6 +3586,7 @@ function renderDressUp(){
       if(equipped) statusHTML = "✨ 穿著中";
       else if(unlocked) statusHTML = "點一下換上";
       else if(o.source === "level") statusHTML = giftStatus("r_limited_dress")==="claimable" ? "🎁 可領取" : `🔒 Lv.${o.levelReq} 升級禮物`;
+      else if(o.source === "achievement"){ const sa = SPECIAL_ACHIEVEMENT_ITEMS.find(x=>x.id===o.saId); statusHTML = saStatus(sa)==="claimable" ? "🏆 可領取" : `🏆 ${Math.min(sa.need, achievementProgress(sa))}/${sa.need}`; }
       else if(levelLocked) statusHTML = `🔒 Lv.${o.levelReq} 解鎖`;
       else statusHTML = "🔒 💎"+o.price;
       card.innerHTML = `
@@ -3593,6 +3604,11 @@ function renderDressUp(){
           renderPreview();
           renderGrid();
           toast(o.name + " 換好了 ♡");
+          return;
+        }
+        if(o.source === "achievement"){
+          const sa = SPECIAL_ACHIEVEMENT_ITEMS.find(x=>x.id===o.saId);
+          if(saStatus(sa) === "claimable") showAchievementClaim(sa.id); else toast(`達成成就就能獲得：${sa.obtainText} ♡`);
           return;
         }
         if(o.source === "level"){
